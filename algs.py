@@ -21,6 +21,6 @@ class MultinomialNBAlg(object):
         self.clf = MultinomialNB(alpha=1.0, class_prior=None, fit_prior=True)
         self.clf.fit(X_train , y_train)
         # Predicting the Test set results
-        y_pred = self.clf.predict(self.X_test)
+        y_pred = self.clf.predict(X_test)
         return y_pred
         

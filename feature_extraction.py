@@ -17,7 +17,7 @@ class FeatureExtractorsBasedOnCorpus:
     def __init__(self, corpus):
         self.corpus = corpus
         
-    def extractor_1(self, clean_dataset):
+    def extractor_1(self):
         # Creating the Bag of Words model
         cv = CountVectorizer()
         X = cv.fit_transform(self.corpus.values).toarray()
