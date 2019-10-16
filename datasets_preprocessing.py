@@ -55,8 +55,12 @@ class Kagle2017DatasetPreprocessors(object):
             dataset['text'] = dataset['text'].map(lambda text: re.sub('[^a-zA-Z0-9]+', ' ',text)).apply(lambda x: (x.lower()).split())
             #используя алгоритм стемминга Портера, создаем словарь - корпус слов 
             ps = PorterStemmer()
-            #Удаляем из списка слов каждого семпла стоп-слова (используя ntlk). 
-            corpus = dataset['text'].apply(lambda sample_words:' '.join( list(map(lambda word: ps.stem(word), list(filter(lambda text: text not in set(stopwords.words('english')), sample_words)))) ))
+            #Удаляем из списка слов каждого семпла стоп-слова (используя ntlk). Технически мы из старых семплов 
+            #делаем новые, с отфильтрованным контентом, далее пропускаем через стемминг с помощью map(),
+            #потом соединяем эл-ты списка пробелами - получаем на один семпл одну строку 
+            #со словами вместо списка слов: .join(map(lambda_a,list from lambda_b(sample_words)))
+            corpus = dataset['text'].apply(lambda sample_words:' '.join( list(map(lambda word: ps.stem(word), 
+                            list(filter(lambda text: text not in set(stopwords.words('english')), sample_words)))) ))
             y = dataset.iloc[:, 1]
             
             corpus.to_csv(path_or_buf = self.PREPROC_CORPUS_FILE_PATH, index = False, columns = ['text'])

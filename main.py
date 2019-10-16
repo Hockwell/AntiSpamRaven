@@ -22,23 +22,25 @@ print('//////////////////////////// preprocessing done')
 X = FeatureExtractorsBasedOnCorpus(corpus).extractor_1() #corpus -> X
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20)
 print('//////////////////////////// feature extraction done')
-alg = MultinomialNBAlg()
+#alg = MultinomialNBAlg()
+alg = ComplementNBAlg()
 y_pred = alg.learn_predict(X_train, X_test, y_train, y_test)
 print('//////////////////////////// learning and prediction done')
 
 # Making the Confusion Matrix
 cm = confusion_matrix(y_test, y_pred)
+print(cm)
 '''
 Confusion Matrix
 array([[863,  11],
        [  1, 264]])
 '''
 #this function computes subset accuracy
-accuracy_score(y_test, y_pred) #0.9894644424934153
-accuracy_score(y_test, y_pred,normalize=False) #1129 out of 1139
+accuracy_score(y_test, y_pred)
+accuracy_score(y_test, y_pred, normalize=False)
 
 # Applying k-Fold Cross Validation
 accuracies = cross_val_score(estimator = alg.clf, X = X_train, y = y_train, cv = 10)
-accuracies.mean()#0.9888085218938609
-accuracies.std()#0.004090356321646494
+accuracies.mean()
+accuracies.std()
 
