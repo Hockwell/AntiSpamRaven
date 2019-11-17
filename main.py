@@ -16,31 +16,52 @@ from sklearn.metrics import confusion_matrix, accuracy_score
 from datasets_preprocessing import *
 from algs import *
 from feature_extraction import *
+from ml_algs_search import *
 
 corpus, y = Kagle2017DatasetPreprocessors().preprocessor_1()
 print('//////////////////////////// preprocessing done')
 X = FeatureExtractorsBasedOnCorpus(corpus).extractor_1() #corpus -> X
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20)
 print('//////////////////////////// feature extraction done')
-#alg = MultinomialNBAlg()
-alg = ComplementNBAlg()
-y_pred = alg.learn_predict(X_train, X_test, y_train, y_test)
-print('//////////////////////////// learning and prediction done')
 
-# Making the Confusion Matrix
-cm = confusion_matrix(y_test, y_pred)
-print(cm)
-'''
-Confusion Matrix
-array([[863,  11],
-       [  1, 264]])
-'''
+#alg =  NearestCentroidAlg()
+#alg =  ComplementNBAlg()
+#alg =  SGDAlg()
+
+#y_pred = alg.learn_predict(X_train, X_test, y_train, y_test)
+#print('//////////////////////////// learning and prediction done')
+
+#search of best algs combination
+algs = {
+        '|----------|': None,
+        'ComplementNB': ComplementNBAlg(),
+        'SGDClassifier': SGDAlg(),
+        'NearestCentroid': NearestCentroidAlg(),
+        'LinearSVC': LinearSVCAlg(),
+        'PassiveAggressiveClassifier': PassiveAggressiveAlg(),
+        'RidgeClassifier': RidgeAlg(),
+        'KNeighborsClassifier': KNeighborsAlg()
+        }
+algs_searcher = AlgsBestCombinationSearcher()
+algs_searcher.prepare(X_train, y_train, 10, list(algs.items()))
+#results_str = algs_searcher.run_ODCSearcher()
+#results_str2 = algs_searcher.run_OCCSearcher()
+#print(results_str)
+#print(results_str2)
+#print('//////////////////////////// algs search done')
+
 #this function computes subset accuracy
-accuracy_score(y_test, y_pred)
-accuracy_score(y_test, y_pred, normalize=False)
+#accuracy_score(y_test, y_pred)
+#accuracy_score(y_test, y_pred, normalize=False)
+
+#Making the Confusion Matrix
+#cm = confusion_matrix(y_test, y_pred)
+#print(cm)
 
 # Applying k-Fold Cross Validation
-accuracies = cross_val_score(estimator = alg.clf, X = X_train, y = y_train, cv = 10)
-accuracies.mean()
-accuracies.std()
+#accuracies = cross_val_score(estimator = alg.clf, X = X_train, y = y_train, cv = 10)
+#accuracies.mean()
+#accuracies.std()
+
+
 
