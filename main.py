@@ -32,21 +32,22 @@ print('//////////////////////////// feature extraction done')
 #print('//////////////////////////// learning and prediction done')
 
 #search of best algs combination
+#algs должен компоноваться элементами так, что None (нет алгоритма) - последний элемент
 algs = {
-        '|----------|': None,
         'ComplementNB': ComplementNBAlg(),
         'SGDClassifier': SGDAlg(),
         'NearestCentroid': NearestCentroidAlg(),
         'LinearSVC': LinearSVCAlg(),
         'PassiveAggressiveClassifier': PassiveAggressiveAlg(),
         'RidgeClassifier': RidgeAlg(),
-        'KNeighborsClassifier': KNeighborsAlg()
+        'KNeighborsClassifier': KNeighborsAlg(),
+        '|----------|': None
         }
 algs_searcher = AlgsBestCombinationSearcher()
 algs_searcher.prepare(X_train, y_train, 10, list(algs.items()))
-#results_str = algs_searcher.run_ODCSearcher()
+results_str = algs_searcher.run_ODCSearcher()
 #results_str2 = algs_searcher.run_OCCSearcher()
-#print(results_str)
+print(results_str)
 #print(results_str2)
 #print('//////////////////////////// algs search done')
 
