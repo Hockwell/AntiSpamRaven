@@ -24,13 +24,13 @@ from abc import ABC, abstractmethod
 
 class MLAlgorithm(ABC):
     @abstractmethod
-    def learn_predict(self, X_train, X_test, y_train, y_test):
+    def learn_predict(self, X_train, X_test, y_train):
         pass
 
 class MultinomialNBAlg(MLAlgorithm):
     #def __init__(self):
 
-    def learn_predict(self, X_train, X_test, y_train, y_test):
+    def learn_predict(self, X_train, X_test, y_train):
         # Fitting Naive Bayes classifier to the Training set
         self.clf = MultinomialNB(alpha=1.0, class_prior=None, fit_prior=True)
         self.clf.fit(X_train , y_train)
@@ -40,7 +40,7 @@ class MultinomialNBAlg(MLAlgorithm):
     
 class ComplementNBAlg(MLAlgorithm):
 
-    def learn_predict(self, X_train, X_test, y_train, y_test):
+    def learn_predict(self, X_train, X_test, y_train):
         # Fitting Naive Bayes classifier to the Training set
         self.clf = ComplementNB(alpha=1.0, class_prior=None, fit_prior=True)
         self.clf.fit(X_train , y_train)
@@ -50,7 +50,7 @@ class ComplementNBAlg(MLAlgorithm):
 
 class NearestCentroidAlg(MLAlgorithm):
     
-    def learn_predict(self, X_train, X_test, y_train, y_test):
+    def learn_predict(self, X_train, X_test, y_train):
         # Fitting Naive Bayes classifier to the Training set
         self.clf = NearestCentroid()
         self.clf.fit(X_train , y_train)
@@ -60,7 +60,7 @@ class NearestCentroidAlg(MLAlgorithm):
 
 class SGDAlg(MLAlgorithm):
 
-    def learn_predict(self, X_train, X_test, y_train, y_test):
+    def learn_predict(self, X_train, X_test, y_train):
         # Fitting Naive Bayes classifier to the Training set
         self.clf = SGDClassifier()
         self.clf.fit(X_train , y_train)
@@ -70,7 +70,7 @@ class SGDAlg(MLAlgorithm):
     
 class LinearSVCAlg(MLAlgorithm):
 
-    def learn_predict(self, X_train, X_test, y_train, y_test):
+    def learn_predict(self, X_train, X_test, y_train):
         # Fitting Naive Bayes classifier to the Training set
         self.clf = LinearSVC()
         self.clf.fit(X_train , y_train)
@@ -80,7 +80,7 @@ class LinearSVCAlg(MLAlgorithm):
     
 class PassiveAggressiveAlg(MLAlgorithm):
 
-    def learn_predict(self, X_train, X_test, y_train, y_test):
+    def learn_predict(self, X_train, X_test, y_train):
         # Fitting Naive Bayes classifier to the Training set
         self.clf = PassiveAggressiveClassifier()
         self.clf.fit(X_train , y_train)
@@ -90,7 +90,7 @@ class PassiveAggressiveAlg(MLAlgorithm):
     
 class RidgeAlg(MLAlgorithm):
 
-    def learn_predict(self, X_train, X_test, y_train, y_test):
+    def learn_predict(self, X_train, X_test, y_train):
         # Fitting Naive Bayes classifier to the Training set
         self.clf = RidgeClassifier()
         self.clf.fit(X_train , y_train)
@@ -98,9 +98,9 @@ class RidgeAlg(MLAlgorithm):
         y_pred = self.clf.predict(X_test)
         return y_pred
     
-class KNeighborsAlg(MLAlgorithm):
+class KNeighborsAlg(MLAlgorithm): #очень медленный
 
-    def learn_predict(self, X_train, X_test, y_train, y_test):
+    def learn_predict(self, X_train, X_test, y_train):
         # Fitting Naive Bayes classifier to the Training set
         self.clf = KNeighborsClassifier()
         self.clf.fit(X_train , y_train)

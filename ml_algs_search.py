@@ -7,6 +7,8 @@
 import numpy as np
 import pandas as pd
 
+import copy
+
 from sklearn.metrics import confusion_matrix, accuracy_score
 
 class AlgsBestCombinationSearcher(object):
@@ -15,7 +17,7 @@ class AlgsBestCombinationSearcher(object):
         self.k_folds = []
         self.combination_length = 4 #данный параметр нужен, если алгоритм общего вида и способен расставлять
         #алгоритмы по m местам, тогда данный параметр нужно иницииализировать через prepare
-        self.combinations_estimators = [] #совпадает по индексам с combinations[]
+        self.combinations_estimates = [] #совпадает по индексам с combinations[]
         
     def prepare(self, X, y, k_folds_amount, algs): #Сочетания без повторений
         
@@ -67,7 +69,6 @@ class AlgsBestCombinationSearcher(object):
                 X_validFold, y_validFold = X[lower_bound_valid:upper_bound_valid], y[lower_bound_valid:upper_bound_valid]
                 X_trainFolds, y_trainFolds = take_train_folds()
                 self.k_folds.append((X_trainFolds, y_trainFolds, X_validFold, y_validFold))
-            print(X_trainFolds)
         
         self.k = k_folds_amount
         self.X = X
@@ -79,25 +80,42 @@ class AlgsBestCombinationSearcher(object):
         generate_algs_combinations()
         split_dataset_on_k_folds()
         
+    def get_algs_combinations_names(self):
+        combi_names = []
+        for combi in self.combinations:
+            combi_name = ''
+            for alg_index in combi:
+                combi_name += self.algs[alg_index][0] + ' '
+            combi_names.append(copy.copy(combi_name))
+        return combi_names
+     
     def run_ODCSearcher(self):
         def calc_estimate_metric(y_pred, y_test):
             return accuracy_score(y_test, y_pred)
                 #accuracy_score(y_test, y_pred, normalize=False)
-                
-        (X_trainFolds, y_trainFolds, X_validFold, y_validFold) = zip(self.k_folds)
+        
+        (X_trainFolds, y_trainFolds, X_validFold, y_validFold) = tuple(zip(*self.k_folds))
         for combi in self.combinations:
-            y_pred_combination = np.zeros(y_validFold.shape[1], dtype=bool)
-            print(y_pred_combination.shape)
-            #для обнаружения спама необходимо, чтобы хотя бы 1 алгоритм признак семпл спамом
-            for alg in combi:
-                alg_obj = alg[2]
-                for (X_trainFolds, y_trainFolds, X_validFold, y_validFold) in self.k_folds:
-                    y_pred = alg_obj.learn_predict(X_train = X_trainFolds, X_test = X_validFold, 
-                                          y_train = y_trainFolds, y_test = y_validFold)
-                    y_pred_combination = np.logical_or (y_pred_combination, y_pred)
-            self.combinations_estimators.append(calc_estimate_metric(y_pred_combination, y_validFold))
-            print(self.combinations_estimators)
-        return (list(zip(self.algs)[0]), self.combinations_estimators)
+            #для обнаружения спама необходимо, чтобы хотя бы 1 алгоритм признал семпл спамом
+            #фиксиоуем тренировочные фолды и валидационный и каждый алгоритм комбинации проверяем на них
+            for (X_trainFolds, y_trainFolds, X_validFold, y_validFold) in self.k_folds:
+                combination_estimates_on_folds_set = []
+                #print(y_validFold.shape)
+                y_pred_combination = np.zeros(y_validFold.shape, dtype=bool)
+                for alg_index in combi:
+                    alg_obj = self.algs[alg_index][1]
+                    if (alg_obj == None):
+                        continue
+                    y_pred_alg = alg_obj.learn_predict(X_train = X_trainFolds, X_test = X_validFold, 
+                                          y_train = y_trainFolds)
+                    y_pred_combination = np.logical_or (y_pred_combination, y_pred_alg)
+                combination_estimates_on_folds_set.append(calc_estimate_metric(y_pred_combination, y_validFold))
+            print(self.algs[alg_index][0])
+            print(np.mean(combination_estimates_on_folds_set))
+            self.combinations_estimates.append(np.mean(combination_estimates_on_folds_set))
+            #print(self.combinations_estimates)
+            #print(self.get_algs_combinations_names())
+        return dict(zip(self.get_algs_combinations_names(), self.combinations_estimates))
             
         
                     
