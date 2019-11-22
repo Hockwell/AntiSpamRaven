@@ -23,9 +23,9 @@ def run_single_algs_test():
         y_pred = alg[1].learn_predict(X_train, X_test, y_train)
         print(alg[0],': ', accuracy_score(y_test, y_pred))
 
-def run_algs_best_combination_searcher():
+def run_algs_best_combination_searcher(algs):
     algs_searcher = AlgsBestCombinationSearcher()
-    algs_searcher.prepare(X_train, y_train, 10, list(algs.items()))
+    algs_searcher.prepare(X_train, y_train, 10, algs)
     results_str = algs_searcher.run_ODCSearcher()
     #results_str2 = algs_searcher.run_OCCSearcher()
     print(results_str)
@@ -45,7 +45,6 @@ print('//////////////////////////// feature extraction done')
 #print('//////////////////////////// learning and prediction done')
 
 #search of best algs combination
-#algs должен компоноваться элементами так, что None (нет алгоритма) - последний элемент
 algs = {
         'ComplementNB': ComplementNBAlg(),
         'SGDClassifier': SGDAlg(),
@@ -54,11 +53,12 @@ algs = {
         'PassiveAggressiveClassifier': PassiveAggressiveAlg(),
         'RidgeClassifier': RidgeAlg(),
         #'KNeighborsClassifier': KNeighborsAlg(),
-        '|----------|': None
+        }
+algs = {
+        'ComplementNB': ComplementNBAlg(),
         }
 
-#run_single_algs_test()
-run_algs_best_combination_searcher()
+run_algs_best_combination_searcher(algs)
 print('//////////////////////////// algs search done')
 
 #this function computes subset accuracy
