@@ -1,4 +1,4 @@
-#%%
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -45,17 +45,18 @@ print('//////////////////////////// feature extraction done')
 #print('//////////////////////////// learning and prediction done')
 
 #search of best algs combination
+#algs = {
+#        'ComplementNB': ComplementNBAlg(),
+#        'SGDClassifier': SGDAlg(),
+#        'NearestCentroid': NearestCentroidAlg(),
+#        'LinearSVC': LinearSVCAlg(),
+#        'PassiveAggressiveClassifier': PassiveAggressiveAlg(),
+#        'RidgeClassifier': RidgeAlg(),
+#        #'KNeighborsClassifier': KNeighborsAlg(),
+#        }
 algs = {
         'ComplementNB': ComplementNBAlg(),
-        'SGDClassifier': SGDAlg(),
-        'NearestCentroid': NearestCentroidAlg(),
-        'LinearSVC': LinearSVCAlg(),
-        'PassiveAggressiveClassifier': PassiveAggressiveAlg(),
-        'RidgeClassifier': RidgeAlg(),
-        #'KNeighborsClassifier': KNeighborsAlg(),
-        }
-algs = {
-        'ComplementNB': ComplementNBAlg(),
+        #'SGDClassifier': SGDAlg()
         }
 
 run_algs_best_combination_searcher(algs)

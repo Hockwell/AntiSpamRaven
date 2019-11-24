@@ -1,5 +1,4 @@
 #ODC - OptimalDisjunctiveCombination
-#OCC - OptimalConjunctivalCombination
 
 #группа классов ищет наилучшую комбинацию алгоритмов ML.
 #для поиска используется кастомная кросс-валидация и варианты объединения детектов
@@ -8,8 +7,11 @@ import numpy as np
 import pandas as pd
 
 import copy
+import json 
 
 from sklearn.metrics import confusion_matrix, accuracy_score
+
+from logs import *
 
 class AlgsBestCombinationSearcher(object):
     def __init__(self):
@@ -96,13 +98,13 @@ class AlgsBestCombinationSearcher(object):
     def run_ODCSearcher(self):
         def calc_estimate_metric(y_pred, y_test):
             return accuracy_score(y_test, y_pred)
-                #accuracy_score(y_test, y_pred, normalize=False)
-        
+		        #accuracy_score(y_test, y_pred, normalize=False)
         (X_trainFolds, y_trainFolds, X_validFold, y_validFold) = tuple(zip(*self.k_folds))
         for combi in self.combinations:
             #для обнаружения спама необходимо, чтобы хотя бы 1 алгоритм признал семпл спамом
             #фиксиоуем тренировочные фолды и валидационный и каждый алгоритм комбинации проверяем на них
             #print('---------', self.get_algs_combination_name(combi))
+            LogsFileProvider().logger_ml_processing.info('---------' + str(self.get_algs_combination_name(combi)))
             for (X_trainFolds, y_trainFolds, X_validFold, y_validFold) in self.k_folds:
                 combination_estimates_on_folds_set = []
                 y_pred_combination = np.zeros(y_validFold.shape, dtype=bool)
@@ -112,18 +114,18 @@ class AlgsBestCombinationSearcher(object):
                         continue
                     #print('alg #',alg_index)
                     y_pred_alg = alg_obj.learn_predict(X_train = X_trainFolds, X_test = X_validFold, 
-                                          y_train = y_trainFolds)
+						                    y_train = y_trainFolds)
                     #print(y_pred_alg)
-                    y_pred_combination = np.logical_or (y_pred_combination, y_pred_alg)
+                    classes, classes_counts = np.unique(y_pred_combination, return_counts = True)
+                    LogsFileProvider().logger_ml_processing.info('y_pred_combination before' + str(dict(zip(classes.tolist(), classes_counts))))
+                    y_pred_combination = np.logical_or(y_pred_combination, y_pred_alg)
+                    classes, classes_counts = np.unique(y_pred_combination, return_counts = True)
+                    LogsFileProvider().logger_ml_processing.info('y_pred_combination after' + str(dict(zip(classes.tolist(), classes_counts))))
                 combination_estimates_on_folds_set.append(calc_estimate_metric(y_pred_combination, y_validFold))
-                #print('folds_shape:', X_trainFolds.shape, X_validFold.shape)
+	        #print('folds_shape:', X_trainFolds.shape, X_validFold.shape)
             algs_combi_mean_estimate = np.mean(combination_estimates_on_folds_set)
             #print(algs_combi_mean_estimate)
             self.combinations_estimates.append(round(algs_combi_mean_estimate,3))
         return dict(zip(self.get_algs_combinations_names(), self.combinations_estimates))
 
-    def run_OCCSearcher(self):
-        #будет реализован, если понадобится
-        #np.logical_and(y_pred_next_alg, y_pred_algs_before)
-        pass
 

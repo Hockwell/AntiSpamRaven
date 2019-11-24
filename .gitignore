@@ -3,3 +3,4 @@
 datasets/datasets.txt
 datasets/names_manual.txt
 *.pyc
+ml_process.log

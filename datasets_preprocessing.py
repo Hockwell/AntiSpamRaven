@@ -28,8 +28,10 @@ class Kagle2017DatasetPreprocessors(object):
         corpus = None
         raw_data = pd.read_csv(self.PATH)
         try:
+            #print('corpus and y loading began')
             corpus = pd.read_csv(filepath_or_buffer = self.PREPROC_CORPUS_FILE_PATH, names = ['text'])['text']
             y = pd.read_csv(filepath_or_buffer = self.PREPROC_Y_FILE_PATH, names = ['y'])['y']
+            #print('corpus and y loading done')
         except IOError:
             try:
                 os.remove(self.PREPROC_CORPUS_FILE_PATH)
