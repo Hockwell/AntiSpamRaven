@@ -20,7 +20,7 @@ class LogsFileProvider(): #Singleton
             pass
 
     def init_loggers(self):
-        self.logger_ml_processing = self.init_log('logger_main', logfile_name="ml_process.log")
+        self.logger_ml_processing = self.init_log('logger', logfile_name="ml_process.log")
 
     def init_log(self,logger_name, logfile_name):
         self.delete_old_log(logfile_name)
@@ -34,9 +34,3 @@ class LogsFileProvider(): #Singleton
         file_handler = logging.FileHandler(file_name)
         file_handler.setFormatter(self.FORMATTER)
         return file_handler
-
-class LogsWriter():
-	def write_dict(log_file, dictt):
-		pass
-	def write_list(log_file, listt):
-		pass

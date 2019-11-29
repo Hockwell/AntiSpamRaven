@@ -45,18 +45,14 @@ print('//////////////////////////// feature extraction done')
 #print('//////////////////////////// learning and prediction done')
 
 #search of best algs combination
-#algs = {
-#        'ComplementNB': ComplementNBAlg(),
-#        'SGDClassifier': SGDAlg(),
-#        'NearestCentroid': NearestCentroidAlg(),
-#        'LinearSVC': LinearSVCAlg(),
-#        'PassiveAggressiveClassifier': PassiveAggressiveAlg(),
-#        'RidgeClassifier': RidgeAlg(),
-#        #'KNeighborsClassifier': KNeighborsAlg(),
-#        }
 algs = {
         'ComplementNB': ComplementNBAlg(),
-        #'SGDClassifier': SGDAlg()
+        'SGDClassifier': SGDAlg(),
+        #'NearestCentroid': NearestCentroidAlg(),
+        #'LinearSVC': LinearSVCAlg(),
+        #'PassiveAggressiveClassifier': PassiveAggressiveAlg(),
+        #'RidgeClassifier': RidgeAlg(),
+        #'KNeighborsClassifier': KNeighborsAlg(),
         }
 
 run_algs_best_combination_searcher(algs)

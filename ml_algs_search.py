@@ -5,41 +5,29 @@
 
 import numpy as np
 import pandas as pd
+from sklearn.metrics import confusion_matrix, accuracy_score
 
 import copy
 import json 
-
-from sklearn.metrics import confusion_matrix, accuracy_score
-
 from logs import *
+
+from itertools import chain, combinations
 
 class AlgsBestCombinationSearcher(object):
     def __init__(self):
-        self.combinations = []
+        self.algs_combinations = None #[ (alg_i_name, alg_i_obj) ]
         self.k_folds = []
-        self.combination_length = 4 #данный параметр нужен, если алгоритм общего вида и способен расставлять
-        #алгоритмы по m местам, тогда данный параметр нужно иницииализировать через prepare
-        self.combinations_estimates = [] #совпадает по индексам с combinations[]
+        self.combinations_quality_metrics = [] #совпадает по индексам с combinations[]
         
-    def prepare(self, X, y, k_folds_amount, algs, are_combinations_full = False): #Сочетания без повторений
-        #algs НЕ должен компоноваться элементами None (нет алгоритма) - последний элемент, этот класс сам сделает это
-        def generate_algs_combinations(): #для 4 слоёв, можно на базе рекурсии и дерева создать общий метод для n слоёв
-            
-            #требуется расставить эл-ты списка на 4 места,на первый взгляд необходимо найти сочетания без повторений,но
-            #есть нюанс - требуется, чтобы элемент пустоты (None) повторялся, и только он, ибо необходимо проверить
-            #алгоритм и по-одиночке, и в паре и т.д.
-            
-            algs_amount = len(self.algs)
-            for i1 in range(0,algs_amount):
-                    j2 = i1+1 if i1+1 <= algs_amount-1 else algs_amount-1
-                    for i2 in range(j2, algs_amount):
-                        j3 = i2+1 if i2+1 <= algs_amount-1 else algs_amount-1
-                        for i3 in range(j3, algs_amount):
-                            j4 = i3+1 if i3+1 <= algs_amount-1 else algs_amount-1
-                            for i4 in range(j4 , algs_amount):
-                                self.combinations.append((i1,i2,i3,i4))
-                
-                            
+    def prepare(self, X, y, k_folds_amount, algs, combination_length = 4): #Сочетания без повторений (n,k) для всех k до заданного - это и есть все подмножества
+        #algs НЕ должен компоноваться элементами None (нет алгоритма)
+        def generate_algs_combinations():
+            def make_all_subsets(iterable):
+                list_ = list(iterable)
+                return list(chain.from_iterable(combinations(list_,k) for k in range(1,self.combination_length+1)))
+
+            self.algs_combinations = make_all_subsets(self.algs)
+            print(self.algs_combinations)                
         def split_dataset_on_k_folds():
             #folds: k-1 - train, k-ый - valid
             def take_train_folds():
@@ -74,24 +62,21 @@ class AlgsBestCombinationSearcher(object):
         self.k = k_folds_amount
         self.X = X
         self.y = y
-        algs['NotAlg'] = None
-        #список алгоритмов с None - заглушка для "нет алгоритма", она обязательна, ибо
-        #данные методы работают с индексами алгоритмов - их комбинируют, а уже по этим индексам будет осуществляться
-        #расстановка алгоритмов по комбинациям, у пустоты тоже должен быть свой индекс
-        #[(alg_name, alg_obj)]
+        self.combination_length = combination_length #данный параметр нужен, если алгоритм общего вида и способен расставлять
+        #алгоритмы по k местам, тогда данный параметр нужно иницииализировать через prepare
         self.algs = list(algs.items())
         generate_algs_combinations()
         split_dataset_on_k_folds()
         
-    def get_algs_combination_name(self, combi_algs_indexes):
+    def get_algs_combination_name(self, algs_combi):
         combi_name = ''
-        for alg_index in combi_algs_indexes:
-            combi_name += self.algs[alg_index][0] + ' + '
+        for alg_name,_ in list(algs_combi):
+            combi_name += alg_name + ' + '
         return combi_name[0:-3]
     
     def get_algs_combinations_names(self):
         combi_names = []
-        for combi in self.combinations:
+        for combi in self.algs_combinations:
             combi_names.append(self.get_algs_combination_name(combi))
         return combi_names
     
@@ -100,32 +85,29 @@ class AlgsBestCombinationSearcher(object):
             return accuracy_score(y_test, y_pred)
 		        #accuracy_score(y_test, y_pred, normalize=False)
         (X_trainFolds, y_trainFolds, X_validFold, y_validFold) = tuple(zip(*self.k_folds))
-        for combi in self.combinations:
+        for combi in self.algs_combinations:
             #для обнаружения спама необходимо, чтобы хотя бы 1 алгоритм признал семпл спамом
-            #фиксиоуем тренировочные фолды и валидационный и каждый алгоритм комбинации проверяем на них
-            #LogsFileProvider().logger_ml_processing.info('---------' + str(self.get_algs_combination_name(combi)))
+            #фиксиоуем тренировочные фолды и валидационный и каждый алгоритм комбинации проверяем на них #Раскомментировать для логирования
+            LogsFileProvider().logger_ml_processing.info('---------' + str(self.get_algs_combination_name(combi)))
             for (X_trainFolds, y_trainFolds, X_validFold, y_validFold) in self.k_folds:
-                combination_estimates_on_folds_set = []
+                combination_q_metrics_on_folds_set = []
                 y_pred_combination = np.zeros(y_validFold.shape, dtype=bool)
-                for alg_index in combi:
-                    alg_obj = self.algs[alg_index][1]
-                    if (alg_obj == None):
-                        continue
+                for alg_name,alg_obj in combi:
                     y_pred_alg = alg_obj.learn_predict(X_train = X_trainFolds, X_test = X_validFold, 
 						                    y_train = y_trainFolds)
+                    y_pred_combination = np.logical_or (y_pred_combination, y_pred_alg)
                     #Раскомментировать для логирования
-                    classes, classes_counts = np.unique(y_pred_combination, return_counts = True)
-                    LogsFileProvider().logger_ml_processing.info('y_pred_combination before' + str(dict(zip(classes.tolist(), classes_counts))))
-                    y_pred_combination = np.logical_or(y_pred_combination, y_pred_alg)
-                    classes, classes_counts = np.unique(y_pred_combination, return_counts = True)
-                    LogsFileProvider().logger_ml_processing.info('y_pred_combination after' + str(dict(zip(classes.tolist(), classes_counts))))
+                    #classes, classes_counts = np.unique(y_pred_combination, return_counts = True)
+                    #LogsFileProvider().logger_ml_processing.info('y_pred_combination before' + str(dict(zip(classes.tolist(), classes_counts))))
+                    #y_pred_combination = np.logical_or(y_pred_combination, y_pred_alg)
+                    #classes, classes_counts = np.unique(y_pred_combination, return_counts = True)
+                    #LogsFileProvider().logger_ml_processing.info('y_pred_combination after' + str(dict(zip(classes.tolist(), classes_counts))))
 
-
-                combination_estimates_on_folds_set.append(calc_estimate_metric(y_pred_combination, y_validFold))
+                combination_q_metrics_on_folds_set.append(calc_estimate_metric(y_pred_combination, y_validFold))
 	        #print('folds_shape:', X_trainFolds.shape, X_validFold.shape)
-            algs_combi_mean_estimate = np.mean(combination_estimates_on_folds_set)
-            #print(algs_combi_mean_estimate)
-            self.combinations_estimates.append(round(algs_combi_mean_estimate,3))
-        return dict(zip(self.get_algs_combinations_names(), self.combinations_estimates))
+            algs_combi_mean_q_metric = np.mean(combination_q_metrics_on_folds_set)
+            LogsFileProvider().logger_ml_processing.info(algs_combi_mean_q_metric) #Раскомментировать для логирования
+            self.combinations_quality_metrics.append(round(algs_combi_mean_q_metric,3))
+        return dict(zip(self.get_algs_combinations_names(), self.combinations_quality_metrics))
 
 
