@@ -5,7 +5,7 @@
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import confusion_matrix, accuracy_score
+from sklearn.metrics import confusion_matrix, accuracy_score, f1_score, recall_score, precision_score
 
 import copy
 import json 
@@ -81,16 +81,30 @@ class AlgsBestCombinationSearcher(object):
         return combi_names
     
     def run_ODCSearcher(self):
-        def calc_estimate_metric(y_pred, y_test):
-            return accuracy_score(y_test, y_pred)
-		        #accuracy_score(y_test, y_pred, normalize=False)
+        def calc_quality_metrics(y_pred, y_test):
+            acc = accuracy_score(y_test, y_pred)
+            f1 = f1_score(y_test, y_pred)
+            prec = precision_score(y_test, y_pred)
+            rec = recall_score(y_test, y_pred)
+            return {'f1': f1, 'acc': acc, 'prec': prec, 'rec': rec}
+
+        def calc_summary_values_of_q_metrics_for_algs_combi():
+            dict_ = {'f1': 0, 'acc': 0, 'prec': 0, 'rec': 0}
+            n = len(algs_combi_q_metrics_values_on_folds_set)
+            for alg_q_metrics in algs_combi_q_metrics_values_on_folds_set:
+                new_values = alg_q_metrics.values()
+                #print(new_values)
+                dict_ = {key:round(((value+new_val)/n),3) for (key, value),new_val in zip(dict_.items(), new_values)}
+                #print(dict_)
+            return dict_
+
         (X_trainFolds, y_trainFolds, X_validFold, y_validFold) = tuple(zip(*self.k_folds))
         for combi in self.algs_combinations:
             #для обнаружения спама необходимо, чтобы хотя бы 1 алгоритм признал семпл спамом
             #фиксиоуем тренировочные фолды и валидационный и каждый алгоритм комбинации проверяем на них #Раскомментировать для логирования
             LogsFileProvider().logger_ml_processing.info('---------' + str(self.get_algs_combination_name(combi)))
             for (X_trainFolds, y_trainFolds, X_validFold, y_validFold) in self.k_folds:
-                combination_q_metrics_on_folds_set = []
+                algs_combi_q_metrics_values_on_folds_set = [] #список dict-ов с метриками
                 y_pred_combination = np.zeros(y_validFold.shape, dtype=bool)
                 for alg_name,alg_obj in combi:
                     y_pred_alg = alg_obj.learn_predict(X_train = X_trainFolds, X_test = X_validFold, 
@@ -98,15 +112,15 @@ class AlgsBestCombinationSearcher(object):
                     y_pred_combination = np.logical_or (y_pred_combination, y_pred_alg)
                     #Раскомментировать для логирования
                     #classes, classes_counts = np.unique(y_pred_combination, return_counts = True)
-                    #LogsFileProvider.get().logger_ml_processing.info('y_pred_combination before' + str(dict(zip(classes.tolist(), classes_counts))))
+                    #LogsFileProvider().logger_ml_processing.info('y_pred_combination before' + str(dict(zip(classes.tolist(), classes_counts))))
                     #y_pred_combination = np.logical_or(y_pred_combination, y_pred_alg)
                     #classes, classes_counts = np.unique(y_pred_combination, return_counts = True)
-                    #LogsFileProvider.get().logger_ml_processing.info('y_pred_combination after' + str(dict(zip(classes.tolist(), classes_counts))))
-                combination_q_metrics_on_folds_set.append(calc_estimate_metric(y_pred_combination, y_validFold))
+                    #LogsFileProvider().logger_ml_processing.info('y_pred_combination after' + str(dict(zip(classes.tolist(), classes_counts))))
+                algs_combi_q_metrics_values_on_folds_set.append(calc_quality_metrics(y_pred_combination, y_validFold))
 	        #print('folds_shape:', X_trainFolds.shape, X_validFold.shape)
-            algs_combi_mean_q_metric = np.mean(combination_q_metrics_on_folds_set)
-            LogsFileProvider().logger_ml_processing.info(algs_combi_mean_q_metric) #Раскомментировать для логирования
-            self.combinations_quality_metrics.append(round(algs_combi_mean_q_metric,3))
+            algs_combi_mean_q_metrics = calc_summary_values_of_q_metrics_for_algs_combi() 
+            LogsFileProvider().logger_ml_processing.info(algs_combi_mean_q_metrics) #Раскомментировать для логирования
+            self.combinations_quality_metrics.append(algs_combi_mean_q_metrics)
         return dict(zip(self.get_algs_combinations_names(), self.combinations_quality_metrics))
 
 

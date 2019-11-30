@@ -3,7 +3,7 @@ import logging
 import os
 
 class LogsFileProvider(object): #Singleton
-    instance = None #экземпляр текущего класса
+    instance = None #static
     class __LogsFileProvider:
         FORMATTER = logging.Formatter("%(asctime)s — %(name)s — %(message)s")
 
@@ -34,14 +34,7 @@ class LogsFileProvider(object): #Singleton
 
     def __new__(cls):
         if cls.instance is None:
-            #cls.instance = super(LogsFileProvider, cls).__new__(cls)
             cls.instance = LogsFileProvider.__LogsFileProvider()
         return cls.instance
-
-    #def get():
-    #    if LogsFileProvider.instance is None:
-    #        #cls.instance = super(LogsFileProvider, cls).__new__(cls)
-    #        LogsFileProvider.instance = LogsFileProvider()
-    #    return LogsFileProvider.instance
 
     
