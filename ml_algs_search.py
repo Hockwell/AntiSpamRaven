@@ -9,9 +9,10 @@ from sklearn.metrics import confusion_matrix, accuracy_score, f1_score, recall_s
 
 import copy
 import json 
-from logs import *
-
+import operator
 from itertools import chain, combinations
+
+from logs import *
 
 class AlgsBestCombinationSearcher(object):
     def __init__(self):
@@ -81,6 +82,7 @@ class AlgsBestCombinationSearcher(object):
         return combi_names
     
     def run_ODCSearcher(self):
+        #метод сохраняет всю информацию о процессе в лог, а возвращает лишь ТОП10 комбинаций алгоритмов, отсортированных по убыванию качества
         def calc_quality_metrics(y_pred, y_test):
             acc = accuracy_score(y_test, y_pred)
             f1 = f1_score(y_test, y_pred)
@@ -94,9 +96,15 @@ class AlgsBestCombinationSearcher(object):
             for alg_q_metrics in algs_combi_q_metrics_values_on_folds_set:
                 new_values = alg_q_metrics.values()
                 #print(new_values)
-                dict_ = {key:round(((value+new_val)/n),3) for (key, value),new_val in zip(dict_.items(), new_values)}
+                dict_ = {key:round(((value+new_val)/n),3) for (key, value),new_val in zip(dict_.items(), new_values)} #среднее значение каждой метрики
                 #print(dict_)
             return dict_
+
+        def sort_algs_combis_by_q_metric(q_metric='f1'):
+            #пример элемента словаря ('ComplementNB', {'f1': 0.977, 'acc': 0.989, 'prec': 0.954, 'rec': 1.0})
+            sorted_ = sorted(algs_combis_with_q_metrics.items(), key=lambda el: el[1][q_metric], reverse=True)
+            #return collections.OrderedDict(sorted_)
+            return sorted_
 
         (X_trainFolds, y_trainFolds, X_validFold, y_validFold) = tuple(zip(*self.k_folds))
         for combi in self.algs_combinations:
@@ -121,6 +129,7 @@ class AlgsBestCombinationSearcher(object):
             algs_combi_mean_q_metrics = calc_summary_values_of_q_metrics_for_algs_combi() 
             LogsFileProvider().logger_ml_processing.info(algs_combi_mean_q_metrics) #Раскомментировать для логирования
             self.combinations_quality_metrics.append(algs_combi_mean_q_metrics)
-        return dict(zip(self.get_algs_combinations_names(), self.combinations_quality_metrics))
+            algs_combis_with_q_metrics = dict(zip(self.get_algs_combinations_names(), self.combinations_quality_metrics))
+        return sort_algs_combis_by_q_metric(q_metric='f1')[:5]
 
 
