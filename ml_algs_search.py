@@ -27,7 +27,7 @@ class AlgsBestCombinationSearcher(object):
                 return list(chain.from_iterable(combinations(list_,k) for k in range(1,self.combination_length+1)))
 
             self.algs_combinations = make_all_subsets(self.algs)
-            print(self.algs_combinations)                
+            #print(self.algs_combinations)                
         def split_dataset_on_k_folds():
             #folds: k-1 - train, k-ый - valid
             def take_train_folds():
@@ -98,11 +98,10 @@ class AlgsBestCombinationSearcher(object):
                     y_pred_combination = np.logical_or (y_pred_combination, y_pred_alg)
                     #Раскомментировать для логирования
                     #classes, classes_counts = np.unique(y_pred_combination, return_counts = True)
-                    #LogsFileProvider().logger_ml_processing.info('y_pred_combination before' + str(dict(zip(classes.tolist(), classes_counts))))
+                    #LogsFileProvider.get().logger_ml_processing.info('y_pred_combination before' + str(dict(zip(classes.tolist(), classes_counts))))
                     #y_pred_combination = np.logical_or(y_pred_combination, y_pred_alg)
                     #classes, classes_counts = np.unique(y_pred_combination, return_counts = True)
-                    #LogsFileProvider().logger_ml_processing.info('y_pred_combination after' + str(dict(zip(classes.tolist(), classes_counts))))
-
+                    #LogsFileProvider.get().logger_ml_processing.info('y_pred_combination after' + str(dict(zip(classes.tolist(), classes_counts))))
                 combination_q_metrics_on_folds_set.append(calc_estimate_metric(y_pred_combination, y_validFold))
 	        #print('folds_shape:', X_trainFolds.shape, X_validFold.shape)
             algs_combi_mean_q_metric = np.mean(combination_q_metrics_on_folds_set)

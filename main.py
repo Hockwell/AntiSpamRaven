@@ -27,8 +27,8 @@ def run_algs_best_combination_searcher(algs):
     algs_searcher = AlgsBestCombinationSearcher()
     algs_searcher.prepare(X_train, y_train, 10, algs)
     results_str = algs_searcher.run_ODCSearcher()
-    #results_str2 = algs_searcher.run_OCCSearcher()
     print(results_str)
+    #results_str2 = algs_searcher.run_OCCSearcher()
     #print(results_str2)
         
 corpus, y = Kagle2017DatasetPreprocessors().preprocessor_1()
