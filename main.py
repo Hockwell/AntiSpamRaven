@@ -41,8 +41,8 @@ def show_graphs_about_dataset(y):
 set_libs_settings()
 corpus, y = Kagle2017DatasetPreprocessors().preprocessor_1()
 X = FeatureExtractorsBasedOnCorpus(corpus).extractor_1() #corpus -> X
-show_graphs_about_dataset(y)
-#X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20)
+#show_graphs_about_dataset(y)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20)
 
 
 #print('//////////////////////////// learning and prediction done')
@@ -51,14 +51,14 @@ show_graphs_about_dataset(y)
 algs = {
         'ComplementNB': ComplementNBAlg(),
         'SGDClassifier': SGDAlg(),
-        'NearestCentroid': NearestCentroidAlg(),
-        'LinearSVC': LinearSVCAlg(),
-        'PassiveAggressiveClassifier': PassiveAggressiveAlg(),
-        'RidgeClassifier': RidgeAlg(),
-        'KNeighborsClassifier': KNeighborsAlg()
+        #'NearestCentroid': NearestCentroidAlg(),
+        #'LinearSVC': LinearSVCAlg(),
+        #'PassiveAggressiveClassifier': PassiveAggressiveAlg(),
+        #'RidgeClassifier': RidgeAlg(),
+        #'KNeighborsClassifier': KNeighborsAlg()
         }
 
-#run_algs_best_combination_searcher(algs)
+run_algs_best_combination_searcher(algs)
 
 #this function computes subset accuracy
 #accuracy_score(y_test, y_pred)
