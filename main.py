@@ -18,6 +18,8 @@ from algs import *
 from feature_extraction import *
 from ml_algs_search import *
 
+digits_formatter = lambda x : '{:1.3f}'.format(x)
+
 def set_libs_settings():
     ax = sns.set(style="darkgrid")
 
@@ -26,13 +28,18 @@ def run_single_algs_test():
         y_pred = alg[1].learn_predict(X_train, X_test, y_train)
         print(alg[0],': ', accuracy_score(y_test, y_pred))
 
+def print_searcher_results(results): #предполагается, что ODC и OCC имеют одинаковый вид результатов
+    for algs_combi_name, q_metrics in results:
+        print('---',algs_combi_name)
+        print([metric_name + '=' + digits_formatter(metric_val) for metric_name,metric_val in q_metrics.items()])
+
 def run_algs_best_combination_searcher(algs):
     algs_searcher = AlgsBestCombinationSearcher()
     algs_searcher.prepare(X_train, y_train, 10, algs)
-    results_str = algs_searcher.run_ODCSearcher()
-    print(results_str)
-    #results_str2 = algs_searcher.run_OCCSearcher()
-    #print(results_str2)
+    ODC_results = algs_searcher.run_ODCSearcher()
+    print_searcher_results(ODC_results)
+    #OCC_results = algs_searcher.run_OCCSearcher()
+    #print(OCC_results)
     print('//////////////////////////// algs search done')
        
 def show_graphs_about_dataset(y):
@@ -41,7 +48,7 @@ def show_graphs_about_dataset(y):
 set_libs_settings()
 corpus, y = Kagle2017DatasetPreprocessors().preprocessor_1()
 X = FeatureExtractorsBasedOnCorpus(corpus).extractor_1() #corpus -> X
-#show_graphs_about_dataset(y)
+show_graphs_about_dataset(y)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20)
 
 
@@ -50,7 +57,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20)
 #search of best algs combination
 algs = {
         'ComplementNB': ComplementNBAlg(),
-        'SGDClassifier': SGDAlg(),
+        'SGDClassifier': SGDAlg()
         #'NearestCentroid': NearestCentroidAlg(),
         #'LinearSVC': LinearSVCAlg(),
         #'PassiveAggressiveClassifier': PassiveAggressiveAlg(),
