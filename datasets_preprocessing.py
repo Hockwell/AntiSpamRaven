@@ -67,4 +67,5 @@ class Kagle2017DatasetPreprocessors(object):
             
             corpus.to_csv(path_or_buf = self.PREPROC_CORPUS_FILE_PATH, index = False, columns = ['text'])
             y.to_csv(path_or_buf = self.PREPROC_Y_FILE_PATH, index = False)
+        print('//////////////////////////// preprocessing done')
         return corpus,y

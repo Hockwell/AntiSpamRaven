@@ -21,4 +21,5 @@ class FeatureExtractorsBasedOnCorpus:
         # Creating the Bag of Words model
         cv = CountVectorizer()
         X = cv.fit_transform(self.corpus.values).toarray()
+        print('//////////////////////////// feature extraction done')
         return X
