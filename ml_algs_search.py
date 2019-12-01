@@ -143,7 +143,9 @@ class AlgsBestCombinationSearcher(object):
                 self.combinations_quality_metrics.append(algs_combi_mean_q_metrics)
 
         single_algs_y_preds = make_single_algs_y_preds_on_folds() #dict {alg_name:[y_pred_fold_i]}
+        print('////////////// make_single_algs_y_preds_on_folds() done')
         calc_combis_quality_metrics()
+        print('////////////// calc_combis_quality_metrics() done')
         algs_combis_with_q_metrics = dict(zip(self.get_algs_combinations_names(), self.combinations_quality_metrics))
         return sort_algs_combis_by_q_metric(q_metric='f1')[:5]
 

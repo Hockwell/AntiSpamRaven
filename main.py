@@ -56,13 +56,19 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20)
 
 #search of best algs combination
 algs = {
-        'ComplementNB': ComplementNBAlg(),
-        'SGDClassifier': SGDAlg()
-        #'NearestCentroid': NearestCentroidAlg(),
-        #'LinearSVC': LinearSVCAlg(),
-        #'PassiveAggressiveClassifier': PassiveAggressiveAlg(),
-        #'RidgeClassifier': RidgeAlg(),
-        #'KNeighborsClassifier': KNeighborsAlg()
+        'ComplementNB': ComplementNBAlg_Default(),
+        'SGDClf_Default': SGDAlg_Default(),
+        'NearestCentroid_Default': NearestCentroidAlg_Default(),
+        'LinearSVC_Default': LinearSVCAlg_Default(),
+        'PassiveAggressiveClf_Default': PassiveAggressiveAlg_Default(),
+        'RidgeClf_Default': RidgeAlg_Default(),
+        'KNeighborsClf_Default': KNeighborsAlg_Default(),
+        'RandomForest_Default': RandomForestAlg_Default(),
+        'RandomForest_Mod1': RandomForestAlg_Mod1(),
+        'RandomForest_Mod2': RandomForestAlg_Mod2(),
+        'RandomForest_Mod3': RandomForestAlg_Mod3(),
+        'RandomForest_Mod4': RandomForestAlg_Mod4(),
+        'Perceptron_Default': PerceptronAlg_Default()
         }
 
 run_algs_best_combination_searcher(algs)

@@ -18,7 +18,9 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.svm import LinearSVC
 from sklearn.linear_model import PassiveAggressiveClassifier
 from sklearn.linear_model import RidgeClassifier
+from sklearn.linear_model import Perceptron
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import RandomForestClassifier
 
 from abc import ABC, abstractmethod
 
@@ -38,7 +40,7 @@ class MultinomialNBAlg(MLAlgorithm):
         y_pred = self.clf.predict(X_test)
         return y_pred
     
-class ComplementNBAlg(MLAlgorithm):
+class ComplementNBAlg_Default(MLAlgorithm):
 
     def learn_predict(self, X_train, X_test, y_train):
         # Fitting Naive Bayes classifier to the Training set
@@ -48,7 +50,7 @@ class ComplementNBAlg(MLAlgorithm):
         y_pred = self.clf.predict(X_test)
         return y_pred
 
-class NearestCentroidAlg(MLAlgorithm):
+class NearestCentroidAlg_Default(MLAlgorithm):
     
     def learn_predict(self, X_train, X_test, y_train):
         # Fitting Naive Bayes classifier to the Training set
@@ -58,7 +60,7 @@ class NearestCentroidAlg(MLAlgorithm):
         y_pred = self.clf.predict(X_test)
         return y_pred
 
-class SGDAlg(MLAlgorithm):
+class SGDAlg_Default(MLAlgorithm):
 
     def learn_predict(self, X_train, X_test, y_train):
         # Fitting Naive Bayes classifier to the Training set
@@ -68,7 +70,7 @@ class SGDAlg(MLAlgorithm):
         y_pred = self.clf.predict(X_test)
         return y_pred
     
-class LinearSVCAlg(MLAlgorithm):
+class LinearSVCAlg_Default(MLAlgorithm):
 
     def learn_predict(self, X_train, X_test, y_train):
         # Fitting Naive Bayes classifier to the Training set
@@ -78,7 +80,7 @@ class LinearSVCAlg(MLAlgorithm):
         y_pred = self.clf.predict(X_test)
         return y_pred
     
-class PassiveAggressiveAlg(MLAlgorithm):
+class PassiveAggressiveAlg_Default(MLAlgorithm):
 
     def learn_predict(self, X_train, X_test, y_train):
         # Fitting Naive Bayes classifier to the Training set
@@ -88,7 +90,7 @@ class PassiveAggressiveAlg(MLAlgorithm):
         y_pred = self.clf.predict(X_test)
         return y_pred
     
-class RidgeAlg(MLAlgorithm):
+class RidgeAlg_Default(MLAlgorithm):
 
     def learn_predict(self, X_train, X_test, y_train):
         # Fitting Naive Bayes classifier to the Training set
@@ -98,13 +100,54 @@ class RidgeAlg(MLAlgorithm):
         y_pred = self.clf.predict(X_test)
         return y_pred
     
-class KNeighborsAlg(MLAlgorithm): #очень медленный
-
+class KNeighborsAlg_Default(MLAlgorithm): #очень медленный
     def learn_predict(self, X_train, X_test, y_train):
         # Fitting Naive Bayes classifier to the Training set
         self.clf = KNeighborsClassifier()
         self.clf.fit(X_train , y_train)
         # Predicting the Test set results
+        y_pred = self.clf.predict(X_test)
+        return y_pred
+
+class RandomForestAlg_Mod1(MLAlgorithm):
+    def learn_predict(self, X_train, X_test, y_train):
+        self.clf = RandomForestClassifier(n_estimators=200, max_depth=3)
+        self.clf.fit(X_train , y_train)
+        y_pred = self.clf.predict(X_test)
+        return y_pred
+
+class RandomForestAlg_Mod2(MLAlgorithm):
+    def learn_predict(self, X_train, X_test, y_train):
+        self.clf = RandomForestClassifier(n_estimators=20)
+        self.clf.fit(X_train , y_train)
+        y_pred = self.clf.predict(X_test)
+        return y_pred
+
+class RandomForestAlg_Mod3(MLAlgorithm):
+    def learn_predict(self, X_train, X_test, y_train):
+        self.clf = RandomForestClassifier(n_estimators=20, max_depth=3)
+        self.clf.fit(X_train , y_train)
+        y_pred = self.clf.predict(X_test)
+        return y_pred
+
+class RandomForestAlg_Mod4(MLAlgorithm):
+    def learn_predict(self, X_train, X_test, y_train):
+        self.clf = RandomForestClassifier(n_estimators=200)
+        self.clf.fit(X_train , y_train)
+        y_pred = self.clf.predict(X_test)
+        return y_pred
+
+class RandomForestAlg_Default(MLAlgorithm):
+    def learn_predict(self, X_train, X_test, y_train):
+        self.clf = RandomForestClassifier(n_estimators=100)
+        self.clf.fit(X_train , y_train)
+        y_pred = self.clf.predict(X_test)
+        return y_pred
+
+class PerceptronAlg_Default(MLAlgorithm):
+    def learn_predict(self, X_train, X_test, y_train):
+        self.clf = Perceptron()
+        self.clf.fit(X_train , y_train)
         y_pred = self.clf.predict(X_test)
         return y_pred
     
