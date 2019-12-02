@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import train_test_split, cross_val_score, StratifiedShuffleSplit
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import confusion_matrix, accuracy_score
 
@@ -17,6 +17,7 @@ from datasets_preprocessing import *
 from algs import *
 from feature_extraction import *
 from ml_algs_search import *
+from generic import *
 
 digits_formatter = lambda x : '{:1.3f}'.format(x)
 
@@ -33,30 +34,30 @@ def print_searcher_results(results): #предполагается, что ODC �
         print('---',algs_combi_name)
         print([metric_name + '=' + digits_formatter(metric_val) for metric_name,metric_val in q_metrics.items()])
 
-def run_algs_best_combination_searcher(algs):
+def run_algs_best_combination_searcher(algs,X,y, k_folds):
     algs_searcher = AlgsBestCombinationSearcher()
-    algs_searcher.prepare(X_train, y_train, 10, algs)
+    algs_searcher.prepare(X, y, k_folds, algs)
     ODC_results = algs_searcher.run_ODCSearcher()
     print_searcher_results(ODC_results)
     #OCC_results = algs_searcher.run_OCCSearcher()
     #print(OCC_results)
     print('//////////////////////////// algs search done')
        
-def show_graphs_about_dataset(y):
+def visualize_dataset(y):
     sns.countplot(y=y)
 
 set_libs_settings()
 corpus, y = Kagle2017DatasetPreprocessors().preprocessor_1()
 X = FeatureExtractorsBasedOnCorpus(corpus).extractor_1() #corpus -> X
-show_graphs_about_dataset(y)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20)
-
-
+X_train, y_train, X_test, y_test = DatasetInstruments.make_shuffle_stratified_split_on_k_folds(X,y, test_size = 0.25, n_splits=1)[0]
+#visualize_dataset(y)
+#visualize_dataset(y_train)
+#visualize_dataset(y_test)
 #print('//////////////////////////// learning and prediction done')
 
 #search of best algs combination
 algs = {
-        'ComplementNB': ComplementNBAlg_Default(),
+        'ComplementNB_Default': ComplementNBAlg_Default(),
         'SGDClf_Default': SGDAlg_Default(),
         'NearestCentroid_Default': NearestCentroidAlg_Default(),
         'LinearSVC_Default': LinearSVCAlg_Default(),
@@ -70,8 +71,8 @@ algs = {
         'RandomForest_Mod4': RandomForestAlg_Mod4(),
         'Perceptron_Default': PerceptronAlg_Default()
         }
-
-run_algs_best_combination_searcher(algs)
+run_single_algs_test()
+#run_algs_best_combination_searcher(algs, X, y, k_folds=10)
 
 #this function computes subset accuracy
 #accuracy_score(y_test, y_pred)

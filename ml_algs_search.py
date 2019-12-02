@@ -13,14 +13,15 @@ import operator
 from itertools import chain, combinations
 
 from logs import *
+from generic import *
 
 class AlgsBestCombinationSearcher(object):
     def __init__(self):
         self.algs_combinations = None #[ (alg_i_name, alg_i_obj) ]
-        self.k_folds = []
+        self.folds = []
         self.combinations_quality_metrics = [] #совпадает по индексам с combinations[]
         
-    def prepare(self, X, y, k_folds_amount, algs, combination_length = 4): 
+    def prepare(self, X, y, k_folds, algs, combination_length = 4): 
         #Сочетания без повторений (n,k) для всех k до заданного - это и есть все подмножества
         #algs НЕ должен компоноваться элементами None (нет алгоритма)
         def generate_algs_combinations():
@@ -30,45 +31,15 @@ class AlgsBestCombinationSearcher(object):
 
             self.algs_combinations = make_all_subsets(self.algs)
             #print(self.algs_combinations)                
-        def split_dataset_on_k_folds():
-            #folds: k-1 - train, k-ый - valid
-            def take_train_folds():
-                lower_bound_train = upper_bound_valid if upper_bound_valid < samples_amount-1 else 0
-                upper_bound_train = lower_bound_train + train_folds_size
-                #print(lower_bound_train, upper_bound_train)
-                if (upper_bound_train > samples_amount-1):
-                    upper_bound_train = upper_bound_train - (samples_amount-1)
-                    X_part1, y_part1 = X[lower_bound_train: samples_amount], y[lower_bound_train: samples_amount] 
-                else:
-                    X_part1, y_part1 = [],[]
-                    #part1 - до конца датасета, part2 -с начала датасета
-                X_part2, y_part2 = X[:upper_bound_train], y[:upper_bound_train]
-                #return X_part1.append(X_part2, ignore_index=True), y_part1.append(y_part2, ignore_index=True)
-                return np.append(X_part1, X_part2, axis=0), np.append(y_part1, y_part2,axis=0)
-                
-            X_trainFolds = []
-            X_validFold = []
-            y_trainFolds = []
-            y_validFold = []
-            samples_amount = X.shape[0]
-            valid_fold_size = int(samples_amount/self.k) #округление вниз
-            train_folds_size = samples_amount - valid_fold_size
-            #первая часть достаётся валидационному фолду, а остальные обучающим
-            for i in range(self.k):
-                lower_bound_valid = i*valid_fold_size
-                upper_bound_valid = lower_bound_valid + valid_fold_size
-                X_validFold, y_validFold = X[lower_bound_valid:upper_bound_valid], y[lower_bound_valid:upper_bound_valid]
-                X_trainFolds, y_trainFolds = take_train_folds()
-                self.k_folds.append((X_trainFolds, y_trainFolds, X_validFold, y_validFold))
-        
-        self.k = k_folds_amount
+
+        self.k = k_folds
         self.X = X
         self.y = y
         self.combination_length = combination_length #данный параметр нужен, если алгоритм общего вида и способен расставлять
         #алгоритмы по k местам, тогда данный параметр нужно иницииализировать через prepare
         self.algs = list(algs.items())
         generate_algs_combinations()
-        split_dataset_on_k_folds()
+        self.folds = DatasetInstruments.make_stratified_split_on_stratified_k_folds(X,y,self.k)
         
     def get_algs_combination_name(self, algs_combi):
         combi_name = ''
@@ -113,7 +84,7 @@ class AlgsBestCombinationSearcher(object):
             dict_ = {}
             for alg_name,alg_obj in self.algs:
                 dict_[alg_name] = []
-                for (X_trainFolds, y_trainFolds, X_validFold, y_validFold) in self.k_folds:
+                for (X_trainFolds, y_trainFolds, X_validFold, y_validFold) in self.folds:
                     y_pred_alg = alg_obj.learn_predict(X_train = X_trainFolds, X_test = X_validFold, 
 						                        y_train = y_trainFolds)
                     dict_[alg_name].append(y_pred_alg)
@@ -124,7 +95,7 @@ class AlgsBestCombinationSearcher(object):
             #для обнаружения спама необходимо, чтобы хотя бы 1 алгоритм признал семпл спамом
             #фиксиоуем тренировочные фолды и валидационный и каждый алгоритм комбинации проверяем на них #Раскомментировать для логирования
                 LogsFileProvider().logger_ml_processing.info('---------' + str(self.get_algs_combination_name(combi)))
-                for (i,(_, _, X_validFold, y_validFold)) in enumerate(self.k_folds):
+                for (i,(_, _, X_validFold, y_validFold)) in enumerate(self.folds):
                     algs_combi_q_metrics_values_on_folds = [] #список dict-ов с метриками
                     y_pred_combination = np.zeros(y_validFold.shape, dtype=bool)
                     for alg_name,_ in combi:
