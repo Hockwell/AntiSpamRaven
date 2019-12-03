@@ -5,7 +5,7 @@ import os
 class LogsFileProvider(object): #Singleton
     instance = None #static
     class __LogsFileProvider:
-        FORMATTER = logging.Formatter("%(asctime)s — %(name)s — %(message)s")
+        FORMATTER = logging.Formatter("%(message)s")
 
         def __init__(self):
             self.init_loggers()
@@ -16,8 +16,11 @@ class LogsFileProvider(object): #Singleton
             except OSError:
                 pass
 
-        def init_loggers(self):
-            self.logger_ml_processing = self.init_log('logger', logfile_name="ml_process.log")
+        def init_loggers(self): #для добавления логгера просто вписать сюда в виде поля
+            #нужен, например, для записи информации по мере её поступления, чтобы в случае сбоя программы сохранились инфа для поиска ошибки
+            #в процессах ML
+            self.ml_research_general = self.init_log('logger', logfile_name="ml_research_general.log")
+            self.ml_research_combis_sorted = self.init_log('logger2', logfile_name="ml_research_combis_sorted.log")
 
         def init_log(self,logger_name, logfile_name):
             self.delete_old_log(logfile_name)

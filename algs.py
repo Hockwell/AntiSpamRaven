@@ -21,6 +21,7 @@ from sklearn.linear_model import RidgeClassifier
 from sklearn.linear_model import Perceptron
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.neighbors.nearest_centroid import NearestCentroid
 
 from abc import ABC, abstractmethod
 
@@ -132,7 +133,7 @@ class RandomForestAlg_Mod3(MLAlgorithm):
 
 class RandomForestAlg_Mod4(MLAlgorithm):
     def learn_predict(self, X_train, X_test, y_train):
-        self.clf = RandomForestClassifier(n_estimators=200)
+        self.clf = RandomForestClassifier(n_estimators=500)
         self.clf.fit(X_train , y_train)
         y_pred = self.clf.predict(X_test)
         return y_pred
@@ -150,4 +151,5 @@ class PerceptronAlg_Default(MLAlgorithm):
         self.clf.fit(X_train , y_train)
         y_pred = self.clf.predict(X_test)
         return y_pred
-    
+
+

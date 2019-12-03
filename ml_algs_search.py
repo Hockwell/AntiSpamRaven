@@ -20,7 +20,15 @@ class AlgsBestCombinationSearcher(object):
         self.algs_combinations = None #[ (alg_i_name, alg_i_obj) ]
         self.folds = []
         self.combinations_quality_metrics = [] #совпадает по индексам с combinations[]
-        
+
+    @staticmethod
+    def export_searcher_results(results): #предполагается, что ODC и OCC имеют одинаковый вид результатов
+        digits_formatter = lambda x : '{:1.3f}'.format(x)
+        for algs_combi_name, q_metrics in results:
+            LogsFileProvider().ml_research_combis_sorted.info('---' + algs_combi_name)
+            LogsFileProvider().ml_research_combis_sorted.info(
+                [metric_name + '=' + digits_formatter(metric_val) for metric_name,metric_val in q_metrics.items()])
+
     def prepare(self, X, y, k_folds, algs, combination_length = 4): 
         #Сочетания без повторений (n,k) для всех k до заданного - это и есть все подмножества
         #algs НЕ должен компоноваться элементами None (нет алгоритма)
@@ -54,7 +62,7 @@ class AlgsBestCombinationSearcher(object):
         return combi_names
     
     def run_ODCSearcher(self):
-        #метод сохраняет всю информацию о процессе в лог, а возвращает лишь ТОП10 комбинаций алгоритмов, отсортированных по убыванию качества
+        #метод сохраняет всю информацию о процессе в лог, а возвращает лишь ТОП комбинаций алгоритмов, отсортированных по убыванию качества
         #как происходит поиск комбинации: сначала каждый алгоритм по - одиночке проходит по фолдам, потом эти результаты комбинируются,
         #это куда эффективнее, чем подход с постоянным обучаением одних и тех же алгоритмов, которые встречаются в разных комбинациях
         def calc_quality_metrics(y_pred, y_test):
@@ -94,7 +102,7 @@ class AlgsBestCombinationSearcher(object):
             for combi in self.algs_combinations:
             #для обнаружения спама необходимо, чтобы хотя бы 1 алгоритм признал семпл спамом
             #фиксиоуем тренировочные фолды и валидационный и каждый алгоритм комбинации проверяем на них #Раскомментировать для логирования
-                LogsFileProvider().logger_ml_processing.info('---------' + str(self.get_algs_combination_name(combi)))
+                #LogsFileProvider().ml_research_general.info('---------' + str(self.get_algs_combination_name(combi)))
                 for (i,(_, _, X_validFold, y_validFold)) in enumerate(self.folds):
                     algs_combi_q_metrics_values_on_folds = [] #список dict-ов с метриками
                     y_pred_combination = np.zeros(y_validFold.shape, dtype=bool)
@@ -110,7 +118,7 @@ class AlgsBestCombinationSearcher(object):
                     algs_combi_q_metrics_values_on_folds.append(calc_quality_metrics(y_pred_combination, y_validFold))
 	            #print('folds_shape:', X_trainFolds.shape, X_validFold.shape)
                 algs_combi_mean_q_metrics = calc_summary_values_of_q_metrics_for_algs_combi(algs_combi_q_metrics_values_on_folds) 
-                LogsFileProvider().logger_ml_processing.info(algs_combi_mean_q_metrics) #Раскомментировать для логирования
+                #LogsFileProvider().ml_research_general.info(algs_combi_mean_q_metrics) #Раскомментировать для логирования
                 self.combinations_quality_metrics.append(algs_combi_mean_q_metrics)
 
         single_algs_y_preds = make_single_algs_y_preds_on_folds() #dict {alg_name:[y_pred_fold_i]}
@@ -118,6 +126,8 @@ class AlgsBestCombinationSearcher(object):
         calc_combis_quality_metrics()
         print('////////////// calc_combis_quality_metrics() done')
         algs_combis_with_q_metrics = dict(zip(self.get_algs_combinations_names(), self.combinations_quality_metrics))
-        return sort_algs_combis_by_q_metric(q_metric='f1')[:5]
+        sorted_results = sort_algs_combis_by_q_metric(q_metric='f1')
+        AlgsBestCombinationSearcher.export_searcher_results(sorted_results)
+        #return sort_algs_combis_by_q_metric(q_metric='f1')[:180] #ТОП
 
 

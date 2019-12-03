@@ -19,7 +19,7 @@ from feature_extraction import *
 from ml_algs_search import *
 from generic import *
 
-digits_formatter = lambda x : '{:1.3f}'.format(x)
+import sys
 
 def set_libs_settings():
     ax = sns.set(style="darkgrid")
@@ -29,17 +29,12 @@ def run_single_algs_test():
         y_pred = alg[1].learn_predict(X_train, X_test, y_train)
         print(alg[0],': ', accuracy_score(y_test, y_pred))
 
-def print_searcher_results(results): #предполагается, что ODC и OCC имеют одинаковый вид результатов
-    for algs_combi_name, q_metrics in results:
-        print('---',algs_combi_name)
-        print([metric_name + '=' + digits_formatter(metric_val) for metric_name,metric_val in q_metrics.items()])
-
 def run_algs_best_combination_searcher(algs,X,y, k_folds):
     algs_searcher = AlgsBestCombinationSearcher()
     algs_searcher.prepare(X, y, k_folds, algs)
-    ODC_results = algs_searcher.run_ODCSearcher()
-    print_searcher_results(ODC_results)
-    #OCC_results = algs_searcher.run_OCCSearcher()
+    algs_searcher.run_ODCSearcher()
+    #print_searcher_results(ODC_results)
+    #algs_searcher.run_OCCSearcher()
     #print(OCC_results)
     print('//////////////////////////// algs search done')
        
@@ -49,7 +44,7 @@ def visualize_dataset(y):
 set_libs_settings()
 corpus, y = Kagle2017DatasetPreprocessors().preprocessor_1()
 X = FeatureExtractorsBasedOnCorpus(corpus).extractor_1() #corpus -> X
-X_train, y_train, X_test, y_test = DatasetInstruments.make_shuffle_stratified_split_on_k_folds(X,y, test_size = 0.25, n_splits=1)[0]
+#X_train, y_train, X_test, y_test = DatasetInstruments.make_shuffle_stratified_split_on_k_folds(X,y, test_size = 0.25, n_splits=1)[0]
 #visualize_dataset(y)
 #visualize_dataset(y_train)
 #visualize_dataset(y_test)
@@ -71,8 +66,8 @@ algs = {
         'RandomForest_Mod4': RandomForestAlg_Mod4(),
         'Perceptron_Default': PerceptronAlg_Default()
         }
-run_single_algs_test()
-#run_algs_best_combination_searcher(algs, X, y, k_folds=10)
+#run_single_algs_test()
+run_algs_best_combination_searcher(algs, X, y, k_folds=10)
 
 #this function computes subset accuracy
 #accuracy_score(y_test, y_pred)
@@ -86,6 +81,5 @@ run_single_algs_test()
 #accuracies = cross_val_score(estimator = alg.clf, X = X_train, y = y_train, cv = 10)
 #accuracies.mean()
 #accuracies.std()
-
 
 

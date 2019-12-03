@@ -4,3 +4,5 @@ datasets/datasets.txt
 datasets/names_manual.txt
 *.pyc
 ml_process.log
+ml_research_combis_sorted.log
+ml_research_general.log
