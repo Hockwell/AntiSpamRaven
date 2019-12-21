@@ -16,10 +16,16 @@ from sklearn.metrics import confusion_matrix, accuracy_score
 class FeatureExtractorsBasedOnCorpus:
     def __init__(self, corpus):
         self.corpus = corpus
-        
-    def extractor_1(self):
+
+    def extractor_words_counts_1(self):
         # Creating the Bag of Words model
         cv = CountVectorizer()
         X = cv.fit_transform(self.corpus.values).toarray()
-        print('//////////////////////////// feature extraction done')
+        return X
+
+    def extractor_tfidf_1(self):
+        # Creating the Bag of Words model
+        cv = CountVectorizer()
+        X = cv.fit_transform(self.corpus.values).toarray()
+        
         return X

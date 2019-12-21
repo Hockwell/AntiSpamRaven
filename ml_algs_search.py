@@ -5,7 +5,7 @@
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import confusion_matrix, accuracy_score, f1_score, recall_score, precision_score
+from sklearn.metrics import confusion_matrix, accuracy_score, f1_score, recall_score, precision_score, auc, roc_curve
 
 import copy
 import json 
@@ -22,11 +22,11 @@ class AlgsBestCombinationSearcher(object):
         self.combinations_quality_metrics = [] #совпадает по индексам с combinations[]
 
     @staticmethod
-    def export_searcher_results(results): #предполагается, что ODC и OCC имеют одинаковый вид результатов
+    def export_searcher_results(results, log_obj): #предполагается, что ODC и OCC имеют одинаковый вид результатов
         digits_formatter = lambda x : '{:1.3f}'.format(x)
         for algs_combi_name, q_metrics in results:
-            LogsFileProvider().ml_research_combis_sorted.info('---' + algs_combi_name)
-            LogsFileProvider().ml_research_combis_sorted.info(
+            log_obj.info('---' + algs_combi_name)
+            log_obj.info(
                 [metric_name + '=' + digits_formatter(metric_val) for metric_name,metric_val in q_metrics.items()])
 
     def prepare(self, X, y, k_folds, algs, combination_length = 4): 
@@ -70,10 +70,12 @@ class AlgsBestCombinationSearcher(object):
             f1 = f1_score(y_test, y_pred)
             prec = precision_score(y_test, y_pred)
             rec = recall_score(y_test, y_pred)
-            return {'f1': f1, 'acc': acc, 'prec': prec, 'rec': rec}
+            fpr, tpr, thresholds = roc_curve(y_test, y_pred, pos_label=2)
+            auc_val = auc(fpr, tpr)
+            return {'f1': f1, 'auc': auc_val, 'acc': acc, 'prec': prec, 'rec': rec, 'pred_time': -1, 'train_time': -1}
 
         def calc_summary_values_of_q_metrics_for_algs_combi(algs_combi_q_metrics_values_on_folds):
-            dict_ = {'f1': 0, 'acc': 0, 'prec': 0, 'rec': 0}
+            dict_ = { 'f1': 0, 'auc': 0, 'acc': 0, 'prec': 0, 'rec': 0, 'pred_time': 0, 'train_time': 0 }
             n = len(algs_combi_q_metrics_values_on_folds)
             for alg_q_metrics in algs_combi_q_metrics_values_on_folds:
                 new_values = alg_q_metrics.values()
@@ -82,9 +84,9 @@ class AlgsBestCombinationSearcher(object):
                 #print(dict_)
             return dict_
 
-        def sort_algs_combis_by_q_metric(q_metric='f1'):
+        def sort_algs_combis_by_q_metrics(keys_lambda = lambda el: el[1]['f1']):
             #пример элемента словаря ('ComplementNB', {'f1': 0.977, 'acc': 0.989, 'prec': 0.954, 'rec': 1.0})
-            sorted_ = sorted(algs_combis_with_q_metrics.items(), key=lambda el: el[1][q_metric], reverse=True)
+            sorted_ = sorted(algs_combis_with_q_metrics.items(), key= keys_lambda, reverse=True)
             #return collections.OrderedDict(sorted_)
             return sorted_
 
@@ -125,9 +127,11 @@ class AlgsBestCombinationSearcher(object):
         print('////////////// make_single_algs_y_preds_on_folds() done')
         calc_combis_quality_metrics()
         print('////////////// calc_combis_quality_metrics() done')
-        algs_combis_with_q_metrics = dict(zip(self.get_algs_combinations_names(), self.combinations_quality_metrics))
-        sorted_results = sort_algs_combis_by_q_metric(q_metric='f1')
-        AlgsBestCombinationSearcher.export_searcher_results(sorted_results)
-        #return sort_algs_combis_by_q_metric(q_metric='f1')[:180] #ТОП
 
+        algs_combis_with_q_metrics = dict(zip(self.get_algs_combinations_names(), self.combinations_quality_metrics))
+        sorted_by_f1_results = sort_algs_combis_by_q_metrics(lambda el: (el[1]['f1'], el[1]['rec'], el[1]['pred_time']))
+        AlgsBestCombinationSearcher.export_searcher_results(sorted_by_f1_results, LogsFileProvider().ml_research_combis_sorted_f1)
+        sorted_by_recall_results = sort_algs_combis_by_q_metrics(lambda el:  (el[1]['rec'], el[1]['f1'], el[1]['pred_time']))
+        AlgsBestCombinationSearcher.export_searcher_results(sorted_by_recall_results, LogsFileProvider().ml_research_combis_sorted_recall)
+        print('////////////// logs done')
 

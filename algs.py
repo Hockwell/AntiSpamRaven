@@ -152,4 +152,44 @@ class PerceptronAlg_Default(MLAlgorithm):
         y_pred = self.clf.predict(X_test)
         return y_pred
 
+#class DecisionTreeAlg_Default(MLAlgorithm):
+#    def learn_predict(self, X_train, X_test, y_train):
+#        self.clf = ///
+#        self.clf.fit(X_train , y_train)
+#        y_pred = self.clf.predict(X_test)
+#        return y_pred
 
+#class LogisticRegrAlg_Default(MLAlgorithm):
+#    def learn_predict(self, X_train, X_test, y_train):
+#        self.clf = ///
+#        self.clf.fit(X_train , y_train)
+#        y_pred = self.clf.predict(X_test)
+#        return y_pred
+
+#class AdaBoostAlg_Default(MLAlgorithm):
+#    def learn_predict(self, X_train, X_test, y_train):
+#        self.clf = ///
+#        self.clf.fit(X_train , y_train)
+#        y_pred = self.clf.predict(X_test)
+#        return y_pred
+
+#class CatBoostAlg_Default(MLAlgorithm):
+#    def learn_predict(self, X_train, X_test, y_train):
+#        self.clf = ///
+#        self.clf.fit(X_train , y_train)
+#        y_pred = self.clf.predict(X_test)
+#        return y_pred
+
+#class XGBoostAlg_Default(MLAlgorithm):
+#    def learn_predict(self, X_train, X_test, y_train):
+#        self.clf = ///
+#        self.clf.fit(X_train , y_train)
+#        y_pred = self.clf.predict(X_test)
+#        return y_pred
+
+#class LightGBMAlg_Default(MLAlgorithm):
+#    def learn_predict(self, X_train, X_test, y_train):
+#        self.clf = ///
+#        self.clf.fit(X_train , y_train)
+#        y_pred = self.clf.predict(X_test)
+#        return y_pred

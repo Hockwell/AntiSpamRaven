@@ -20,7 +20,8 @@ class LogsFileProvider(object): #Singleton
             #нужен, например, для записи информации по мере её поступления, чтобы в случае сбоя программы сохранились инфа для поиска ошибки
             #в процессах ML
             self.ml_research_general = self.init_log('logger', logfile_name="ml_research_general.log")
-            self.ml_research_combis_sorted = self.init_log('logger2', logfile_name="ml_research_combis_sorted.log")
+            self.ml_research_combis_sorted_f1 = self.init_log('logger2', logfile_name="ml_research_combis_f1.log")
+            self.ml_research_combis_sorted_recall = self.init_log('logger3', logfile_name="ml_research_combis_recall.log")
 
         def init_log(self,logger_name, logfile_name):
             self.delete_old_log(logfile_name)
