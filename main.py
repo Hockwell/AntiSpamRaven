@@ -1,17 +1,8 @@
 #%%
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.model_selection import train_test_split, cross_val_score, StratifiedShuffleSplit
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import confusion_matrix, accuracy_score
 
-import re
-import nltk
-from nltk.corpus import stopwords
-from nltk.stem.porter import PorterStemmer
+from sklearn.metrics import accuracy_score
+
 
 from datasets_preprocessing import *
 from algs import *
@@ -41,8 +32,8 @@ def visualize_dataset(y):
     sns.countplot(y=y)
 
 set_libs_settings()
-corpus, y = Kagle2017DatasetPreprocessors().preprocessor_1()
-X = FeatureExtractorsBasedOnCorpus(corpus).extractor_tfidf_1() #corpus -> X
+dataset_corpus, y = Kagle2017DatasetPreprocessors().preprocessor_1()
+X = FeatureExtractorsBasedOnCorpus(dataset_corpus).extractor_tfidf_1() #corpus -> X
 print('//////////////////////////// feature extraction done')
 #X_train, y_train, X_test, y_test = DatasetInstruments.make_shuffle_stratified_split_on_k_folds(X,y, test_size = 0.25, n_splits=1)[0]
 #visualize_dataset(y)

@@ -4,12 +4,9 @@
 #для поиска используется кастомная кросс-валидация и варианты объединения детектов
 
 import numpy as np
-import pandas as pd
-from sklearn.metrics import confusion_matrix, accuracy_score, f1_score, recall_score, precision_score, roc_auc_score
 
-import copy
-import json 
-import operator
+from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score, roc_auc_score
+
 from itertools import chain, combinations
 
 from logs import *
