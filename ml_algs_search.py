@@ -5,7 +5,7 @@
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import confusion_matrix, accuracy_score, f1_score, recall_score, precision_score, auc, roc_curve
+from sklearn.metrics import confusion_matrix, accuracy_score, f1_score, recall_score, precision_score, roc_auc_score
 
 import copy
 import json 
@@ -70,9 +70,8 @@ class AlgsBestCombinationSearcher(object):
             f1 = f1_score(y_test, y_pred)
             prec = precision_score(y_test, y_pred)
             rec = recall_score(y_test, y_pred)
-            fpr, tpr, thresholds = roc_curve(y_test, y_pred, pos_label=2)
-            auc_val = auc(fpr, tpr)
-            return {'f1': f1, 'auc': auc_val, 'acc': acc, 'prec': prec, 'rec': rec, 'pred_time': -1, 'train_time': -1}
+            auc = roc_auc_score(y_test, y_pred)
+            return {'f1': f1, 'auc': auc, 'acc': acc, 'prec': prec, 'rec': rec, 'pred_time': -1, 'train_time': -1}
 
         def calc_summary_values_of_q_metrics_for_algs_combi(algs_combi_q_metrics_values_on_folds):
             dict_ = { 'f1': 0, 'auc': 0, 'acc': 0, 'prec': 0, 'rec': 0, 'pred_time': 0, 'train_time': 0 }
@@ -80,7 +79,7 @@ class AlgsBestCombinationSearcher(object):
             for alg_q_metrics in algs_combi_q_metrics_values_on_folds:
                 new_values = alg_q_metrics.values()
                 #print(new_values)
-                dict_ = {key:round(((value+new_val)/n),3) for (key, value),new_val in zip(dict_.items(), new_values)} #среднее значение каждой метрики
+                dict_ = {key:round(((value+new_val)/n),4) for (key, value),new_val in zip(dict_.items(), new_values)} #среднее значение каждой метрики
                 #print(dict_)
             return dict_
 
