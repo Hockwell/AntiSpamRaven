@@ -24,6 +24,8 @@ class LogsFileProvider(object): #Singleton
             self.ml_ODC_sorted_recall = self.init_log('logger3', logfile_name="ml_ODC_sorted_recall.log")
             self.ml_OCC_sorted_f1 = self.init_log('logger21', logfile_name="ml_OCC_sorted_f1.log")
             self.ml_OCC_sorted_recall = self.init_log('logger31', logfile_name="ml_OCC_sorted_recall.log")
+            self.ml_ODC_OCC_sorted_f1 = self.init_log('logger40', logfile_name="ml_ODC_OCC_sorted_f1.log")
+            self.ml_ODC_OCC_sorted_recall = self.init_log('logger41', logfile_name="ml_ODC_OCC_sorted_recall.log")
 
         def init_log(self,logger_name, logfile_name):
             self.delete_old_log(logfile_name)

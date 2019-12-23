@@ -16,6 +16,7 @@ class AlgsBestCombinationSearcher(object):
     def __init__(self):
         self.algs_combinations = None #[ (alg_i_name, alg_i_obj) ]
         self.folds = []
+        self.single_algs_y_preds = {} #самостоятельные предсказания алгоритмов на фолдах
 
     @staticmethod
     def export_searcher_results(results, log_obj): #предполагается, что ODC и OCC имеют одинаковый вид результатов
@@ -39,6 +40,8 @@ class AlgsBestCombinationSearcher(object):
                 return lfp.ml_OCC_sorted_f1, lfp.ml_OCC_sorted_recall
             if (results_from == 2):
                 return lfp.ml_ODC_sorted_f1, lfp.ml_ODC_sorted_recall
+            if (results_from == 3):
+                return lfp.ml_ODC_OCC_sorted_f1, lfp.ml_ODC_OCC_sorted_recall
 
         lfp = LogsFileProvider()
         f1_logger, recall_logger = switch_loggers()
@@ -50,15 +53,30 @@ class AlgsBestCombinationSearcher(object):
         AlgsBestCombinationSearcher.export_searcher_results(sorted_by_recall_results, recall_logger)
         #print('////////////// logs done')
 
+    def make_single_algs_y_preds_on_folds(self): #запоминаем результаты, данные каждым алгоритмом в отдельности, на каждом фолде
+        for alg_name,alg_obj in self.algs:
+            self.single_algs_y_preds[alg_name] = []
+            for (X_trainFolds, y_trainFolds, X_validFold, y_validFold) in self.folds:
+                y_pred_alg = alg_obj.learn_predict(X_train = X_trainFolds, X_test = X_validFold, 
+						                    y_train = y_trainFolds)
+                self.single_algs_y_preds[alg_name].append(y_pred_alg)
+        print('////////////////// make_single_algs_y_preds_on_folds() done')
+
     def run(self, X, y, k_folds, algs):
-        self.prepare(X, y, k_folds, algs)
+        self.tune(X, y, k_folds, algs)
+        self.make_single_algs_y_preds_on_folds() #dict {alg_name:[y_pred_fold_i]}
+
         odc_results = self.run_ODC_OCC_searcher(run_OCC = False)
         AlgsBestCombinationSearcher.log_results(odc_results, results_from = 2)
+
         occ_results = self.run_ODC_OCC_searcher(run_OCC = True)
         AlgsBestCombinationSearcher.log_results(occ_results, results_from = 1)
-        #объединить списки и логгировать
 
-    def prepare(self, X, y, k_folds, algs, combination_length = 4): 
+        odc_occ_results = dict(odc_results)
+        odc_occ_results.update(occ_results)
+        AlgsBestCombinationSearcher.log_results(odc_occ_results, results_from = 3)
+
+    def tune(self, X, y, k_folds, algs, combination_length = 4): 
         #Сочетания без повторений (n,k) для всех k до заданного - это и есть все подмножества
         #algs НЕ должен компоноваться элементами None (нет алгоритма)
         def generate_algs_combinations():
@@ -113,16 +131,6 @@ class AlgsBestCombinationSearcher(object):
                 #print(dict_)
             return dict_
 
-        def make_single_algs_y_preds_on_folds(): #запоминаем результаты, данные каждым алгоритмом в отдельности, на каждом фолде
-            dict_ = {}
-            for alg_name,alg_obj in self.algs:
-                dict_[alg_name] = []
-                for (X_trainFolds, y_trainFolds, X_validFold, y_validFold) in self.folds:
-                    y_pred_alg = alg_obj.learn_predict(X_train = X_trainFolds, X_test = X_validFold, 
-						                        y_train = y_trainFolds)
-                    dict_[alg_name].append(y_pred_alg)
-            return dict_
-
         def calc_combis_quality_metrics():
             combis_aggregation_func = np.logical_and if run_OCC else np.logical_or
             y_pred_combi_init_func = np.ones if run_OCC else np.zeros
@@ -150,8 +158,7 @@ class AlgsBestCombinationSearcher(object):
                 algs_combis_quality_metrics.append(algs_combi_q_metrics_mean)
 
         algs_combis_quality_metrics = []
-        single_algs_y_preds = make_single_algs_y_preds_on_folds() #dict {alg_name:[y_pred_fold_i]}
-        print('////////////// make_single_algs_y_preds_on_folds() done')
+        
         calc_combis_quality_metrics()
         print('////////////// calc_combis_quality_metrics() done')
         algs_combis_with_q_metrics = dict(zip(self.get_algs_combinations_names(run_OCC), algs_combis_quality_metrics))
