@@ -20,11 +20,10 @@ class AlgsBestCombinationSearcher(object):
 
     @staticmethod
     def export_searcher_results(results, log_obj): #предполагается, что ODC и OCC имеют одинаковый вид результатов
-        digits_formatter = lambda x : '{:1.3f}'.format(x)
         for algs_combi_name, q_metrics in results:
             log_obj.info('---' + algs_combi_name)
             log_obj.info(
-                [metric_name + '=' + digits_formatter(metric_val) for metric_name,metric_val in q_metrics.items()])
+                [metric_name + '=' + str(metric_val) for metric_name,metric_val in q_metrics.items()])
 
     @staticmethod
     def sort_algs_combis_by_q_metrics(algs_combis_with_q_metrics, keys_lambda = lambda el: el[1]['f1']):
@@ -76,7 +75,7 @@ class AlgsBestCombinationSearcher(object):
         odc_occ_results.update(occ_results)
         AlgsBestCombinationSearcher.log_results(odc_occ_results, results_from = 3)
 
-    def tune(self, X, y, k_folds, algs, combination_length = 4): 
+    def tune(self, X, y, k_folds, algs, combination_length = 4, metrics_fraction_length = 4): 
         #Сочетания без повторений (n,k) для всех k до заданного - это и есть все подмножества
         #algs НЕ должен компоноваться элементами None (нет алгоритма)
         def generate_algs_combinations():
@@ -87,6 +86,7 @@ class AlgsBestCombinationSearcher(object):
             self.algs_combinations = make_all_subsets(self.algs)
             #print(self.algs_combinations)                
 
+        self.metrics_fraction_length = metrics_fraction_length
         self.k = k_folds
         self.X = X
         self.y = y
@@ -127,7 +127,7 @@ class AlgsBestCombinationSearcher(object):
             for alg_q_metrics in algs_combi_q_metrics_values_on_folds:
                 new_values = alg_q_metrics.values()
                 #print(new_values)
-                dict_ = {key:round(((value+new_val)/n),4) for (key, value),new_val in zip(dict_.items(), new_values)} #среднее значение каждой метрики
+                dict_ = {key:round(((value+new_val)/n), self.metrics_fraction_length) for (key, value),new_val in zip(dict_.items(), new_values)} #среднее значение каждой метрики
                 #print(dict_)
             return dict_
 
