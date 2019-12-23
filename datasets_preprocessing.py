@@ -36,10 +36,7 @@ class Kagle2017DatasetPreprocessors(object):
             dataset = raw_data.drop_duplicates()
             #Checking for any null entries in the dataset
             #print (pd.DataFrame(dataset.isnull().sum()))
-            '''
-            text  0
-            spam  0
-            '''
+
             #Using Natural Language Processing to cleaning the text to make one corpus
             # Cleaning the texts
             #Every mail starts with 'Subject :' will remove this from each text 

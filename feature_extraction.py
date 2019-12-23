@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 
-class FeatureExtractorsBasedOnCorpus:
+class FeatureExtractorsForDatasets:
     def __init__(self, corpus):
         self.dataset_corpus = corpus
 

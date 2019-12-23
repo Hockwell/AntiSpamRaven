@@ -1,5 +1,5 @@
 #ODC - OptimalDisjunctiveCombination
-
+#OCC - OptimalConjuctiveCombination
 #группа классов ищет наилучшую комбинацию алгоритмов ML.
 #для поиска используется кастомная кросс-валидация и варианты объединения детектов
 
@@ -16,7 +16,6 @@ class AlgsBestCombinationSearcher(object):
     def __init__(self):
         self.algs_combinations = None #[ (alg_i_name, alg_i_obj) ]
         self.folds = []
-        self.combinations_quality_metrics = [] #совпадает по индексам с combinations[]
 
     @staticmethod
     def export_searcher_results(results, log_obj): #предполагается, что ODC и OCC имеют одинаковый вид результатов
@@ -25,6 +24,39 @@ class AlgsBestCombinationSearcher(object):
             log_obj.info('---' + algs_combi_name)
             log_obj.info(
                 [metric_name + '=' + digits_formatter(metric_val) for metric_name,metric_val in q_metrics.items()])
+
+    @staticmethod
+    def sort_algs_combis_by_q_metrics(algs_combis_with_q_metrics, keys_lambda = lambda el: el[1]['f1']):
+        #пример элемента словаря ('ComplementNB', {'f1': 0.977, 'acc': 0.989, 'prec': 0.954, 'rec': 1.0})
+        sorted_ = sorted(algs_combis_with_q_metrics.items(), key= keys_lambda, reverse=True)
+        #return collections.OrderedDict(sorted_)
+        return sorted_
+
+    @staticmethod
+    def log_results(algs_combis_with_q_metrics, results_from): #results - {algs_combi_name, {metrics}}
+        def switch_loggers():
+            if (results_from == 1):
+                return lfp.ml_OCC_sorted_f1, lfp.ml_OCC_sorted_recall
+            if (results_from == 2):
+                return lfp.ml_ODC_sorted_f1, lfp.ml_ODC_sorted_recall
+
+        lfp = LogsFileProvider()
+        f1_logger, recall_logger = switch_loggers()
+        sorted_by_f1_results = AlgsBestCombinationSearcher.sort_algs_combis_by_q_metrics(algs_combis_with_q_metrics, 
+                                                                                         lambda el: (el[1]['f1'], el[1]['rec'], el[1]['pred_time']))
+        AlgsBestCombinationSearcher.export_searcher_results(sorted_by_f1_results, f1_logger)
+        sorted_by_recall_results = AlgsBestCombinationSearcher.sort_algs_combis_by_q_metrics(algs_combis_with_q_metrics,
+            lambda el:  (el[1]['rec'], el[1]['f1'], el[1]['pred_time']))
+        AlgsBestCombinationSearcher.export_searcher_results(sorted_by_recall_results, recall_logger)
+        #print('////////////// logs done')
+
+    def run(self, X, y, k_folds, algs):
+        self.prepare(X, y, k_folds, algs)
+        odc_results = self.run_ODC_OCC_searcher(run_OCC = False)
+        AlgsBestCombinationSearcher.log_results(odc_results, results_from = 2)
+        occ_results = self.run_ODC_OCC_searcher(run_OCC = True)
+        AlgsBestCombinationSearcher.log_results(occ_results, results_from = 1)
+        #объединить списки и логгировать
 
     def prepare(self, X, y, k_folds, algs, combination_length = 4): 
         #Сочетания без повторений (n,k) для всех k до заданного - это и есть все подмножества
@@ -46,19 +78,20 @@ class AlgsBestCombinationSearcher(object):
         generate_algs_combinations()
         self.folds = DatasetInstruments.make_stratified_split_on_stratified_k_folds(X,y,self.k)
         
-    def get_algs_combination_name(self, algs_combi):
-        combi_name = ''
-        for alg_name,_ in list(algs_combi):
-            combi_name += alg_name + ' + '
-        return combi_name[0:-3]
-    
-    def get_algs_combinations_names(self):
+    def get_algs_combinations_names(self, run_OCC):
+        def get_algs_combination_name(algs_combi):
+            alg_names_separator = ' * ' if run_OCC else ' + '
+            combi_name = ''
+            for alg_name,_ in list(algs_combi):
+                combi_name += alg_name + alg_names_separator
+            return combi_name[0:-len(alg_names_separator)]
+
         combi_names = []
         for combi in self.algs_combinations:
-            combi_names.append(self.get_algs_combination_name(combi))
+            combi_names.append(get_algs_combination_name(combi))
         return combi_names
     
-    def run_ODCSearcher(self):
+    def run_ODC_OCC_searcher(self, run_OCC = False):
         #метод сохраняет всю информацию о процессе в лог, а возвращает лишь ТОП комбинаций алгоритмов, отсортированных по убыванию качества
         #как происходит поиск комбинации: сначала каждый алгоритм по - одиночке проходит по фолдам, потом эти результаты комбинируются,
         #это куда эффективнее, чем подход с постоянным обучаением одних и тех же алгоритмов, которые встречаются в разных комбинациях
@@ -80,12 +113,6 @@ class AlgsBestCombinationSearcher(object):
                 #print(dict_)
             return dict_
 
-        def sort_algs_combis_by_q_metrics(keys_lambda = lambda el: el[1]['f1']):
-            #пример элемента словаря ('ComplementNB', {'f1': 0.977, 'acc': 0.989, 'prec': 0.954, 'rec': 1.0})
-            sorted_ = sorted(algs_combis_with_q_metrics.items(), key= keys_lambda, reverse=True)
-            #return collections.OrderedDict(sorted_)
-            return sorted_
-
         def make_single_algs_y_preds_on_folds(): #запоминаем результаты, данные каждым алгоритмом в отдельности, на каждом фолде
             dict_ = {}
             for alg_name,alg_obj in self.algs:
@@ -97,37 +124,38 @@ class AlgsBestCombinationSearcher(object):
             return dict_
 
         def calc_combis_quality_metrics():
+            combis_aggregation_func = np.logical_and if run_OCC else np.logical_or
+            y_pred_combi_init_func = np.ones if run_OCC else np.zeros
+
             for combi in self.algs_combinations:
             #для обнаружения спама необходимо, чтобы хотя бы 1 алгоритм признал семпл спамом
             #фиксиоуем тренировочные фолды и валидационный и каждый алгоритм комбинации проверяем на них #Раскомментировать для логирования
                 #LogsFileProvider().ml_research_general.info('---------' + str(self.get_algs_combination_name(combi)))
                 for (i,(_, _, X_validFold, y_validFold)) in enumerate(self.folds):
                     algs_combi_q_metrics_values_on_folds = [] #список dict-ов с метриками
-                    y_pred_combination = np.zeros(y_validFold.shape, dtype=bool)
+                    y_pred_combination = y_pred_combi_init_func(y_validFold.shape, dtype=bool)
                     for alg_name,_ in combi:
-                        y_pred_alg = single_algs_y_preds[alg_name][i]
-                        y_pred_combination = np.logical_or (y_pred_combination, y_pred_alg)
                         #Раскомментировать для логирования
                         #classes, classes_counts = np.unique(y_pred_combination, return_counts = True)
-                        #LogsFileProvider().logger_ml_processing.info('y_pred_combination before' + str(dict(zip(classes.tolist(), classes_counts))))
-                        #y_pred_combination = np.logical_or(y_pred_combination, y_pred_alg)
+                        #LogsFileProvider().ml_research_general.info('y_pred_combination before' + str(dict(zip(classes.tolist(), classes_counts))))
+                        y_pred_alg = single_algs_y_preds[alg_name][i]
+                        y_pred_combination = combis_aggregation_func(y_pred_combination, y_pred_alg)
+                        #Раскомментировать для логирования
                         #classes, classes_counts = np.unique(y_pred_combination, return_counts = True)
-                        #LogsFileProvider().logger_ml_processing.info('y_pred_combination after' + str(dict(zip(classes.tolist(), classes_counts))))
+                        #LogsFileProvider().ml_research_general.info('y_pred_combination after' + str(dict(zip(classes.tolist(), classes_counts))))
                     algs_combi_q_metrics_values_on_folds.append(calc_quality_metrics(y_pred_combination, y_validFold))
 	            #print('folds_shape:', X_trainFolds.shape, X_validFold.shape)
-                algs_combi_mean_q_metrics = calc_summary_values_of_q_metrics_for_algs_combi(algs_combi_q_metrics_values_on_folds) 
+                algs_combi_q_metrics_mean = calc_summary_values_of_q_metrics_for_algs_combi(algs_combi_q_metrics_values_on_folds) 
                 #LogsFileProvider().ml_research_general.info(algs_combi_mean_q_metrics) #Раскомментировать для логирования
-                self.combinations_quality_metrics.append(algs_combi_mean_q_metrics)
+                algs_combis_quality_metrics.append(algs_combi_q_metrics_mean)
 
+        algs_combis_quality_metrics = []
         single_algs_y_preds = make_single_algs_y_preds_on_folds() #dict {alg_name:[y_pred_fold_i]}
         print('////////////// make_single_algs_y_preds_on_folds() done')
         calc_combis_quality_metrics()
         print('////////////// calc_combis_quality_metrics() done')
-
-        algs_combis_with_q_metrics = dict(zip(self.get_algs_combinations_names(), self.combinations_quality_metrics))
-        sorted_by_f1_results = sort_algs_combis_by_q_metrics(lambda el: (el[1]['f1'], el[1]['rec'], el[1]['pred_time']))
-        AlgsBestCombinationSearcher.export_searcher_results(sorted_by_f1_results, LogsFileProvider().ml_research_combis_sorted_f1)
-        sorted_by_recall_results = sort_algs_combis_by_q_metrics(lambda el:  (el[1]['rec'], el[1]['f1'], el[1]['pred_time']))
-        AlgsBestCombinationSearcher.export_searcher_results(sorted_by_recall_results, LogsFileProvider().ml_research_combis_sorted_recall)
-        print('////////////// logs done')
+        algs_combis_with_q_metrics = dict(zip(self.get_algs_combinations_names(run_OCC), algs_combis_quality_metrics))
+        print('////////////////// ODC_OCC Searcher done')
+        #print(algs_combis_with_q_metrics)
+        return algs_combis_with_q_metrics
 

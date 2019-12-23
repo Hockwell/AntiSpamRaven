@@ -1,6 +1,0 @@
----SGDClf_Default
-['f1=0.996', 'auc=0.999', 'acc=0.998', 'prec=0.993', 'rec=1.000', 'pred_time=-1.000', 'train_time=-1.000']
----ComplementNB_Default + SGDClf_Default
-['f1=0.993', 'auc=0.998', 'acc=0.997', 'prec=0.986', 'rec=1.000', 'pred_time=-1.000', 'train_time=-1.000']
----ComplementNB_Default
-['f1=0.921', 'auc=0.929', 'acc=0.965', 'prec=0.992', 'rec=0.860', 'pred_time=-1.000', 'train_time=-1.000']

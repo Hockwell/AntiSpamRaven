@@ -21,11 +21,7 @@ def run_single_algs_test():
 
 def run_algs_best_combination_searcher(algs,X,y, k_folds):
     algs_searcher = AlgsBestCombinationSearcher()
-    algs_searcher.prepare(X, y, k_folds, algs)
-    algs_searcher.run_ODCSearcher()
-    #print_searcher_results(ODC_results)
-    #algs_searcher.run_OCCSearcher()
-    #print(OCC_results)
+    algs_searcher.run(X, y, k_folds, algs)
     print('//////////////////////////// algs search done')
        
 def visualize_dataset(y):
@@ -33,7 +29,7 @@ def visualize_dataset(y):
 
 set_libs_settings()
 dataset_corpus, y = Kagle2017DatasetPreprocessors().preprocessor_1()
-X = FeatureExtractorsBasedOnCorpus(dataset_corpus).extractor_tfidf_1() #corpus -> X
+X = FeatureExtractorsForDatasets(dataset_corpus).extractor_tfidf_1() #corpus -> X
 print('//////////////////////////// feature extraction done')
 #X_train, y_train, X_test, y_test = DatasetInstruments.make_shuffle_stratified_split_on_k_folds(X,y, test_size = 0.25, n_splits=1)[0]
 #visualize_dataset(y)
