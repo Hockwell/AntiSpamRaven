@@ -146,7 +146,7 @@ class AlgsBestCombinationSearcher(object):
                         #Раскомментировать для логирования
                         #classes, classes_counts = np.unique(y_pred_combination, return_counts = True)
                         #LogsFileProvider().ml_research_general.info('y_pred_combination before' + str(dict(zip(classes.tolist(), classes_counts))))
-                        y_pred_alg = single_algs_y_preds[alg_name][i]
+                        y_pred_alg = self.single_algs_y_preds[alg_name][i]
                         y_pred_combination = combis_aggregation_func(y_pred_combination, y_pred_alg)
                         #Раскомментировать для логирования
                         #classes, classes_counts = np.unique(y_pred_combination, return_counts = True)
