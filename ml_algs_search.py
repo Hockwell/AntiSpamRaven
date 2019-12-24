@@ -14,9 +14,10 @@ from generic import *
 
 class AlgsBestCombinationSearcher(object):
     def __init__(self):
-        self.algs_combinations = None #[ (alg_i_name, alg_i_obj) ]
+        self.algs_combinations = None #[ [(alg_i_name, alg_i_obj),(),()...],[],[]... ]
         self.folds = []
         self.single_algs_y_preds = {} #самостоятельные предсказания алгоритмов на фолдах
+        self.single_algs_train_pred_times = {} #{alg_name:{train_time, pred_time}}
 
     @staticmethod
     def export_searcher_results(results, log_obj): #предполагается, что ODC и OCC имеют одинаковый вид результатов
@@ -52,18 +53,18 @@ class AlgsBestCombinationSearcher(object):
         AlgsBestCombinationSearcher.export_searcher_results(sorted_by_recall_results, recall_logger)
         #print('////////////// logs done')
 
-    def make_single_algs_y_preds_on_folds(self): #запоминаем результаты, данные каждым алгоритмом в отдельности, на каждом фолде
+    def test_single_algs_on_folds(self): #запоминаем результаты, данные каждым алгоритмом в отдельности, на каждом фолде
         for alg_name,alg_obj in self.algs:
             self.single_algs_y_preds[alg_name] = []
             for (X_trainFolds, y_trainFolds, X_validFold, y_validFold) in self.folds:
                 y_pred_alg = alg_obj.learn_predict(X_train = X_trainFolds, X_test = X_validFold, 
 						                    y_train = y_trainFolds)
                 self.single_algs_y_preds[alg_name].append(y_pred_alg)
-        print('////////////////// make_single_algs_y_preds_on_folds() done')
+        print('////////////////// test_single_algs_on_folds() done')
 
     def run(self, X, y, k_folds, algs):
         self.tune(X, y, k_folds, algs)
-        self.make_single_algs_y_preds_on_folds() #dict {alg_name:[y_pred_fold_i]}
+        self.test_single_algs_on_folds() #dict {alg_name:[y_pred_fold_i]}
 
         odc_results = self.run_ODC_OCC_searcher(run_OCC = False)
         AlgsBestCombinationSearcher.log_results(odc_results, results_from = 2)
@@ -137,7 +138,8 @@ class AlgsBestCombinationSearcher(object):
 
             for combi in self.algs_combinations:
             #для обнаружения спама необходимо, чтобы хотя бы 1 алгоритм признал семпл спамом
-            #фиксиоуем тренировочные фолды и валидационный и каждый алгоритм комбинации проверяем на них #Раскомментировать для логирования
+            #фиксиоуем тренировочные фолды и валидационный и каждый алгоритм комбинации проверяем на них 
+                #Раскомментировать для логирования
                 #LogsFileProvider().ml_research_general.info('---------' + str(self.get_algs_combination_name(combi)))
                 for (i,(_, _, X_validFold, y_validFold)) in enumerate(self.folds):
                     algs_combi_q_metrics_values_on_folds = [] #список dict-ов с метриками
