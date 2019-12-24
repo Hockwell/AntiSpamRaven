@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-
-
-
 from sklearn.naive_bayes import MultinomialNB, ComplementNB
 from sklearn.neighbors import NearestCentroid
 from sklearn.linear_model import SGDClassifier
@@ -83,43 +80,25 @@ class PerceptronAlg_Default(MLAlgorithm):
         self._clf = Perceptron()
 
 #class DecisionTreeAlg_Default(MLAlgorithm):
-#    def learn_predict(self, X_train, X_test, y_train):
-#        self.clf = ///
-#        self.clf.fit(X_train , y_train)
-#        y_pred = self.clf.predict(X_test)
-#        return y_pred
+#    def __init__(self):
+#        self._clf = Perceptron()
 
 #class LogisticRegrAlg_Default(MLAlgorithm):
-#    def learn_predict(self, X_train, X_test, y_train):
-#        self.clf = ///
-#        self.clf.fit(X_train , y_train)
-#        y_pred = self.clf.predict(X_test)
-#        return y_pred
+#    def __init__(self):
+#        self._clf = Perceptron()
 
 #class AdaBoostAlg_Default(MLAlgorithm):
-#    def learn_predict(self, X_train, X_test, y_train):
-#        self.clf = ///
-#        self.clf.fit(X_train , y_train)
-#        y_pred = self.clf.predict(X_test)
-#        return y_pred
+#    def __init__(self):
+#        self._clf = Perceptron()
 
 #class CatBoostAlg_Default(MLAlgorithm):
-#    def learn_predict(self, X_train, X_test, y_train):
-#        self.clf = ///
-#        self.clf.fit(X_train , y_train)
-#        y_pred = self.clf.predict(X_test)
-#        return y_pred
+#    def __init__(self):
+#        self._clf = Perceptron()
 
 #class XGBoostAlg_Default(MLAlgorithm):
-#    def learn_predict(self, X_train, X_test, y_train):
-#        self.clf = ///
-#        self.clf.fit(X_train , y_train)
-#        y_pred = self.clf.predict(X_test)
-#        return y_pred
+#    def __init__(self):
+#        self._clf = Perceptron()
 
 #class LightGBMAlg_Default(MLAlgorithm):
-#    def learn_predict(self, X_train, X_test, y_train):
-#        self.clf = ///
-#        self.clf.fit(X_train , y_train)
-#        y_pred = self.clf.predict(X_test)
-#        return y_pred
+#    def __init__(self):
+#        self._clf = Perceptron()

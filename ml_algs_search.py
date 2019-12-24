@@ -14,10 +14,10 @@ from generic import *
 
 class AlgsBestCombinationSearcher(object):
     def __init__(self):
-        self.algs_combinations = None #[ [(alg_i_name, alg_i_obj),(),()...],[],[]... ]
-        self.folds = []
-        self.single_algs_y_preds = {} #самостоятельные предсказания алгоритмов на фолдах
-        self.single_algs_train_pred_times = {} #{alg_name:{train_time, pred_time}}
+        self.__algs_combinations = None #[ [(alg_i_name, alg_i_obj),(),()...],[],[]... ]
+        self.__folds = []
+        self.__single_algs_y_preds = {} #самостоятельные предсказания алгоритмов на фолдах
+        self.__single_algs_train_pred_times = {} #{alg_name:{train_time, pred_time}}
 
     @staticmethod
     def export_searcher_results(results, log_obj): #предполагается, что ODC и OCC имеют одинаковый вид результатов
@@ -54,12 +54,12 @@ class AlgsBestCombinationSearcher(object):
         #print('////////////// logs done')
 
     def test_single_algs_on_folds(self): #запоминаем результаты, данные каждым алгоритмом в отдельности, на каждом фолде
-        for alg_name,alg_obj in self.algs:
-            self.single_algs_y_preds[alg_name] = []
-            for (X_trainFolds, y_trainFolds, X_validFold, y_validFold) in self.folds:
+        for alg_name,alg_obj in self.__algs:
+            self.__single_algs_y_preds[alg_name] = []
+            for (X_trainFolds, y_trainFolds, X_validFold, y_validFold) in self.__folds:
                 y_pred_alg = alg_obj.learn_predict(X_train = X_trainFolds, X_test = X_validFold, 
 						                    y_train = y_trainFolds)
-                self.single_algs_y_preds[alg_name].append(y_pred_alg)
+                self.__single_algs_y_preds[alg_name].append(y_pred_alg)
         print('////////////////// test_single_algs_on_folds() done')
 
     def run(self, X, y, k_folds, algs):
@@ -82,20 +82,20 @@ class AlgsBestCombinationSearcher(object):
         def generate_algs_combinations():
             def make_all_subsets(iterable):
                 list_ = list(iterable)
-                return list(chain.from_iterable(combinations(list_,k) for k in range(1,self.combination_length+1)))
+                return list(chain.from_iterable(combinations(list_,k) for k in range(1,self.__combination_length+1)))
 
-            self.algs_combinations = make_all_subsets(self.algs)
+            self.__algs_combinations = make_all_subsets(self.__algs)
             #print(self.algs_combinations)                
 
-        self.metrics_fraction_length = metrics_fraction_length
-        self.k = k_folds
-        self.X = X
-        self.y = y
-        self.combination_length = combination_length #данный параметр нужен, если алгоритм общего вида и способен расставлять
+        self.__metrics_fraction_length = metrics_fraction_length
+        self.__k = k_folds
+        self.__X = X
+        self.__y = y
+        self.__combination_length = combination_length #данный параметр нужен, если алгоритм общего вида и способен расставлять
         #алгоритмы по k местам, тогда данный параметр нужно иницииализировать через prepare
-        self.algs = list(algs.items())
+        self.__algs = list(algs.items())
         generate_algs_combinations()
-        self.folds = DatasetInstruments.make_stratified_split_on_stratified_k_folds(X,y,self.k)
+        self.__folds = DatasetInstruments.make_stratified_split_on_stratified_k_folds(X,y,self.__k)
         
     def get_algs_combinations_names(self, run_OCC):
         def get_algs_combination_name(algs_combi):
@@ -106,7 +106,7 @@ class AlgsBestCombinationSearcher(object):
             return combi_name[0:-len(alg_names_separator)]
 
         combi_names = []
-        for combi in self.algs_combinations:
+        for combi in self.__algs_combinations:
             combi_names.append(get_algs_combination_name(combi))
         return combi_names
     
@@ -128,7 +128,7 @@ class AlgsBestCombinationSearcher(object):
             for alg_q_metrics in algs_combi_q_metrics_values_on_folds:
                 new_values = alg_q_metrics.values()
                 #print(new_values)
-                dict_ = {key:round(((value+new_val)/n), self.metrics_fraction_length) for (key, value),new_val in zip(dict_.items(), new_values)} #среднее значение каждой метрики
+                dict_ = {key:round(((value+new_val)/n), self.__metrics_fraction_length) for (key, value),new_val in zip(dict_.items(), new_values)} #среднее значение каждой метрики
                 #print(dict_)
             return dict_
 
@@ -136,19 +136,19 @@ class AlgsBestCombinationSearcher(object):
             combis_aggregation_func = np.logical_and if run_OCC else np.logical_or
             y_pred_combi_init_func = np.ones if run_OCC else np.zeros
 
-            for combi in self.algs_combinations:
+            for combi in self.__algs_combinations:
             #для обнаружения спама необходимо, чтобы хотя бы 1 алгоритм признал семпл спамом
             #фиксиоуем тренировочные фолды и валидационный и каждый алгоритм комбинации проверяем на них 
                 #Раскомментировать для логирования
                 #LogsFileProvider().ml_research_general.info('---------' + str(self.get_algs_combination_name(combi)))
-                for (i,(_, _, X_validFold, y_validFold)) in enumerate(self.folds):
+                for (i,(_, _, X_validFold, y_validFold)) in enumerate(self.__folds):
                     algs_combi_q_metrics_values_on_folds = [] #список dict-ов с метриками
                     y_pred_combination = y_pred_combi_init_func(y_validFold.shape, dtype=bool)
                     for alg_name,_ in combi:
                         #Раскомментировать для логирования
                         #classes, classes_counts = np.unique(y_pred_combination, return_counts = True)
                         #LogsFileProvider().ml_research_general.info('y_pred_combination before' + str(dict(zip(classes.tolist(), classes_counts))))
-                        y_pred_alg = self.single_algs_y_preds[alg_name][i]
+                        y_pred_alg = self.__single_algs_y_preds[alg_name][i]
                         y_pred_combination = combis_aggregation_func(y_pred_combination, y_pred_alg)
                         #Раскомментировать для логирования
                         #classes, classes_counts = np.unique(y_pred_combination, return_counts = True)

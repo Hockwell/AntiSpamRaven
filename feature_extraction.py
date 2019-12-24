@@ -3,12 +3,12 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 
 class FeatureExtractorsForDatasets:
     def __init__(self, corpus):
-        self.dataset_corpus = corpus
+        self.__dataset_corpus = corpus
 
     def extractor_words_counts_1(self):
         # Creating the Bag of Words model
         cv = CountVectorizer()
-        X = cv.fit_transform(self.dataset_corpus.values).toarray()
+        X = cv.fit_transform(self.__dataset_corpus.values).toarray()
         return X
 
     def extractor_tf_1(self):
