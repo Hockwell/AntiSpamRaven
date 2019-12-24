@@ -8,7 +8,7 @@ class LogsFileProvider(object): #Singleton
         FORMATTER = logging.Formatter("%(message)s")
 
         def __init__(self):
-            self.init_loggers()
+            self.__init_loggers()
 
         def delete_old_log(self, log_path):
             try:
@@ -16,26 +16,26 @@ class LogsFileProvider(object): #Singleton
             except OSError:
                 pass
 
-        def init_loggers(self): #для добавления логгера просто вписать сюда в виде поля
+        def __init_loggers(self): #для добавления логгера просто вписать сюда в виде поля
             #нужен, например, для записи информации по мере её поступления, чтобы в случае сбоя программы сохранились инфа для поиска ошибки
             #в процессах ML
-            self.ml_research_general = self.init_log('logger', logfile_name="ml_research_general.log")
-            self.ml_ODC_sorted_f1 = self.init_log('logger2', logfile_name="ml_ODC_sorted_f1.log")
-            self.ml_ODC_sorted_recall = self.init_log('logger3', logfile_name="ml_ODC_sorted_recall.log")
-            self.ml_OCC_sorted_f1 = self.init_log('logger21', logfile_name="ml_OCC_sorted_f1.log")
-            self.ml_OCC_sorted_recall = self.init_log('logger31', logfile_name="ml_OCC_sorted_recall.log")
-            self.ml_ODC_OCC_sorted_f1 = self.init_log('logger40', logfile_name="ml_ODC_OCC_sorted_f1.log")
-            self.ml_ODC_OCC_sorted_recall = self.init_log('logger41', logfile_name="ml_ODC_OCC_sorted_recall.log")
+            self.ml_research_general = self.__init_log('logger', logfile_name="ml_research_general.log")
+            self.ml_ODC_sorted_f1 = self.__init_log('logger2', logfile_name="ml_ODC_sorted_f1.log")
+            self.ml_ODC_sorted_recall = self.__init_log('logger3', logfile_name="ml_ODC_sorted_recall.log")
+            self.ml_OCC_sorted_f1 = self.__init_log('logger21', logfile_name="ml_OCC_sorted_f1.log")
+            self.ml_OCC_sorted_recall = self.__init_log('logger31', logfile_name="ml_OCC_sorted_recall.log")
+            self.ml_ODC_OCC_sorted_f1 = self.__init_log('logger40', logfile_name="ml_ODC_OCC_sorted_f1.log")
+            self.ml_ODC_OCC_sorted_recall = self.__init_log('logger41', logfile_name="ml_ODC_OCC_sorted_recall.log")
 
-        def init_log(self,logger_name, logfile_name):
+        def __init_log(self,logger_name, logfile_name):
             self.delete_old_log(logfile_name)
             logger = logging.getLogger(logger_name)
             logger.setLevel(logging.INFO)
-            logger.addHandler(self.get_file_handler(logfile_name))
+            logger.addHandler(self.__get_file_handler(logfile_name))
             logger.propagate = False
             return logger
     
-        def get_file_handler(self,file_name):
+        def __get_file_handler(self,file_name):
             file_handler = logging.FileHandler(file_name)
             file_handler.setFormatter(self.FORMATTER)
             return file_handler
