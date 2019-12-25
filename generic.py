@@ -60,3 +60,9 @@ class DatasetInstruments():
             folds.append((X_trainFolds, y_trainFolds, X_validFold, y_validFold))
         return folds
             
+class CollectionsInstruments():
+    @staticmethod
+    def add_up_vals_of_similar_dicts(dicts): #предполагается, что все словари имеют одинаковые ключи
+        keys = dicts[0].keys()
+        dicts_vals_sum = np.sum([list(dict.values()) for dict in dicts], axis=0)
+        return dict(zip(keys, dicts_vals_sum))

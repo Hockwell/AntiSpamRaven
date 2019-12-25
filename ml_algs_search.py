@@ -8,6 +8,7 @@ import numpy as np
 from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score, roc_auc_score
 
 from itertools import chain, combinations
+import time
 
 from logs import *
 from generic import *
@@ -55,15 +56,26 @@ class AlgsBestCombinationSearcher(object):
 
     def __test_single_algs_on_folds(self): #запоминаем результаты, данные каждым алгоритмом в отдельности, на каждом фолде
         for alg_name,alg_obj in self.__algs:
+            train_times_on_folds = []
+            pred_time_on_folds = []
             self.__single_algs_y_preds[alg_name] = []
             for (X_trainFolds, y_trainFolds, X_validFold, y_validFold) in self.__folds:
-                y_pred_alg = alg_obj.learn_predict(X_train = X_trainFolds, X_test = X_validFold, 
-						                    y_train = y_trainFolds)
+                #time.time() - показывает реальное время, а не время CPU, поэтому результаты не очень точные, но этой точности
+                #достаточно, для реализации более точного подсчета с timeit нужно писать куда больше кода. Также, нам не важно
+                #получить абсолютные достоверные значения, важно дифференцировать алгоритмы друг с другом
+                t0 = time.time()
+                alg_obj.learn(X_train = X_trainFolds, y_train = y_trainFolds)
+                t1 = time.time()
+                y_pred_alg = alg_obj.predict(X_test = X_validFold)
+                t2 = time.time()
                 self.__single_algs_y_preds[alg_name].append(y_pred_alg)
+                train_times_on_folds.append(t1-t0)
+                pred_time_on_folds.append(t2-t1)
+            self.__single_algs_train_pred_times[alg_name] = {'train_time': np.mean(train_times_on_folds), 'pred_time': np.mean(pred_time_on_folds)}
         print('////////////////// test_single_algs_on_folds() done')
 
     def run(self, X, y, k_folds, algs):
-        self.tune(X, y, k_folds, algs)
+        self.__tune(X, y, k_folds, algs)
         self.__test_single_algs_on_folds() #dict {alg_name:[y_pred_fold_i]}
 
         odc_results = self.__run_ODC_OCC_searcher(run_OCC = False)
@@ -76,7 +88,7 @@ class AlgsBestCombinationSearcher(object):
         odc_occ_results.update(occ_results)
         AlgsBestCombinationSearcher.__log_results(odc_occ_results, results_from = 3)
 
-    def tune(self, X, y, k_folds, algs, combination_length = 4, metrics_fraction_length = 4): 
+    def __tune(self, X, y, k_folds, algs, combination_length = 4, metrics_fraction_length = 4): 
         #Сочетания без повторений (n,k) для всех k до заданного - это и есть все подмножества
         #algs НЕ должен компоноваться элементами None (нет алгоритма)
         def generate_algs_combinations():
@@ -114,25 +126,37 @@ class AlgsBestCombinationSearcher(object):
         #метод сохраняет всю информацию о процессе в лог, а возвращает лишь ТОП комбинаций алгоритмов, отсортированных по убыванию качества
         #как происходит поиск комбинации: сначала каждый алгоритм по - одиночке проходит по фолдам, потом эти результаты комбинируются,
         #это куда эффективнее, чем подход с постоянным обучаением одних и тех же алгоритмов, которые встречаются в разных комбинациях
-        def calc_quality_metrics(y_pred, y_test):
-            acc = accuracy_score(y_test, y_pred)
-            f1 = f1_score(y_test, y_pred)
-            prec = precision_score(y_test, y_pred)
-            rec = recall_score(y_test, y_pred)
-            auc = roc_auc_score(y_test, y_pred)
-            return {'f1': f1, 'auc': auc, 'acc': acc, 'prec': prec, 'rec': rec, 'pred_time': -1, 'train_time': -1}
+        def calc_combis_quality_metrics(): #их бывает 2 типа: метрики производительности и качества детектирования
 
-        def calc_summary_values_of_q_metrics_for_algs_combi(algs_combi_q_metrics_values_on_folds):
-            dict_ = { 'f1': 0, 'auc': 0, 'acc': 0, 'prec': 0, 'rec': 0, 'pred_time': 0, 'train_time': 0 }
-            n = len(algs_combi_q_metrics_values_on_folds)
-            for alg_q_metrics in algs_combi_q_metrics_values_on_folds:
-                new_values = alg_q_metrics.values()
-                #print(new_values)
-                dict_ = {key:round(((value+new_val)/n), self.__metrics_fraction_length) for (key, value),new_val in zip(dict_.items(), new_values)} #среднее значение каждой метрики
-                #print(dict_)
-            return dict_
+            def calc_detection_quality_metrics(y_pred, y_test):
+                acc = accuracy_score(y_test, y_pred)
+                f1 = f1_score(y_test, y_pred)
+                prec = precision_score(y_test, y_pred)
+                rec = recall_score(y_test, y_pred)
+                auc = roc_auc_score(y_test, y_pred)
+                return {'f1': f1, 'auc': auc, 'acc': acc, 'prec': prec, 'rec': rec}
 
-        def calc_combis_quality_metrics():
+            def calc_mean_perf_q_metrics_for_algs_combi(algs_combination):
+                dicts = [self.__single_algs_train_pred_times[alg_name] for alg_name,_ in algs_combination]
+                print(dicts)
+                return CollectionsInstruments.add_up_vals_of_similar_dicts(dicts)
+
+            def calc_mean_q_metrics_for_algs_combi(algs_combi_det_q_metrics_values_on_folds, algs_combi_mean_perfomance_q_metrics):
+                def add_perfomance_q_metrics_in_results():
+                    dict_['pred_time'] = algs_combi_mean_perfomance_q_metrics['pred_time']
+                    dict_['train_time'] = algs_combi_mean_perfomance_q_metrics['train_time']
+
+                dict_ = { 'f1': 0, 'auc': 0, 'acc': 0, 'prec': 0, 'rec': 0}
+                n = len(algs_combi_det_q_metrics_values_on_folds)
+                for alg_q_metrics in algs_combi_det_q_metrics_values_on_folds:
+                    new_values = alg_q_metrics.values()
+                    #print(new_values)
+                    dict_ = {key:round(((value+new_val)/n), self.__metrics_fraction_length) for (key, value),new_val in 
+                             zip(dict_.items(), new_values)} #среднее значение каждой метрики
+                    #print(dict_)
+                add_perfomance_q_metrics_in_results()
+                return dict_
+
             combis_aggregation_func = np.logical_and if run_OCC else np.logical_or
             y_pred_combi_init_func = np.ones if run_OCC else np.zeros
 
@@ -142,7 +166,7 @@ class AlgsBestCombinationSearcher(object):
                 #Раскомментировать для логирования
                 #LogsFileProvider().ml_research_general.info('---------' + str(self.get_algs_combination_name(combi)))
                 for (i,(_, _, X_validFold, y_validFold)) in enumerate(self.__folds):
-                    algs_combi_q_metrics_values_on_folds = [] #список dict-ов с метриками
+                    algs_combi_det_q_metrics_on_folds = [] #список dict-ов с метриками
                     y_pred_combination = y_pred_combi_init_func(y_validFold.shape, dtype=bool)
                     for alg_name,_ in combi:
                         #Раскомментировать для логирования
@@ -153,11 +177,13 @@ class AlgsBestCombinationSearcher(object):
                         #Раскомментировать для логирования
                         #classes, classes_counts = np.unique(y_pred_combination, return_counts = True)
                         #LogsFileProvider().ml_research_general.info('y_pred_combination after' + str(dict(zip(classes.tolist(), classes_counts))))
-                    algs_combi_q_metrics_values_on_folds.append(calc_quality_metrics(y_pred_combination, y_validFold))
+                    algs_combi_det_q_metrics_on_folds.append(calc_detection_quality_metrics(y_pred_combination, y_validFold))
 	            #print('folds_shape:', X_trainFolds.shape, X_validFold.shape)
-                algs_combi_q_metrics_mean = calc_summary_values_of_q_metrics_for_algs_combi(algs_combi_q_metrics_values_on_folds) 
+                algs_combi_mean_perfomance_q_metrics = calc_mean_perf_q_metrics_for_algs_combi(combi)
+                algs_combi_mean_q_metrics = calc_mean_q_metrics_for_algs_combi(algs_combi_det_q_metrics_on_folds, 
+                                                                               algs_combi_mean_perfomance_q_metrics) 
                 #LogsFileProvider().ml_research_general.info(algs_combi_mean_q_metrics) #Раскомментировать для логирования
-                algs_combis_quality_metrics.append(algs_combi_q_metrics_mean)
+                algs_combis_quality_metrics.append(algs_combi_mean_q_metrics)
 
         algs_combis_quality_metrics = []
         
@@ -165,6 +191,5 @@ class AlgsBestCombinationSearcher(object):
         print('////////////// calc_combis_quality_metrics() done')
         algs_combis_with_q_metrics = dict(zip(self.__get_algs_combinations_names(run_OCC), algs_combis_quality_metrics))
         print('////////////////// ODC_OCC Searcher done')
-        #print(algs_combis_with_q_metrics)
         return algs_combis_with_q_metrics
 
