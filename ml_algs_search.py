@@ -62,7 +62,7 @@ class AlgsBestCombinationSearcher(object):
             for (X_trainFolds, y_trainFolds, X_validFold, y_validFold) in self.__folds:
                 #time.time() - показывает реальное время, а не время CPU, поэтому результаты не очень точные, но этой точности
                 #достаточно, для реализации более точного подсчета с timeit нужно писать куда больше кода. Также, нам не важно
-                #получить абсолютные достоверные значения, важно дифференцировать алгоритмы друг с другом
+                #получить абсолютные достоверные значения, важно дифференцировать алгоритмы друг с другом.
                 t0 = time.time()
                 alg_obj.learn(X_train = X_trainFolds, y_train = y_trainFolds)
                 t1 = time.time()
@@ -88,7 +88,7 @@ class AlgsBestCombinationSearcher(object):
         odc_occ_results.update(occ_results)
         AlgsBestCombinationSearcher.__log_results(odc_occ_results, results_from = 3)
 
-    def __tune(self, X, y, k_folds, algs, combination_length = 4, metrics_fraction_length = 4): 
+    def __tune(self, X, y, k_folds, algs, combination_length = 4, det_metrics_exported_vals_length = 4, perf_metrics_exported_vals_length = 7): 
         #Сочетания без повторений (n,k) для всех k до заданного - это и есть все подмножества
         #algs НЕ должен компоноваться элементами None (нет алгоритма)
         def generate_algs_combinations():
@@ -99,7 +99,8 @@ class AlgsBestCombinationSearcher(object):
             self.__algs_combinations = make_all_subsets(self.__algs)
             #print(self.algs_combinations)                
 
-        self.__metrics_fraction_length = metrics_fraction_length
+        self.__det_metrics_exported_vals_length = det_metrics_exported_vals_length
+        self.__perf_metrics_exported_vals_length = perf_metrics_exported_vals_length
         self.__k = k_folds
         self.__X = X
         self.__y = y
@@ -137,21 +138,23 @@ class AlgsBestCombinationSearcher(object):
                 return {'f1': f1, 'auc': auc, 'acc': acc, 'prec': prec, 'rec': rec}
 
             def calc_mean_perf_q_metrics_for_algs_combi(algs_combination):
+                #pred_time, train_time вычисляются для комбинации подсчетом суммы значений этих метрик для каждого алгоритма в отдельности,
+                #не учитывается время, которое тратится на агрегацию прогнозов (or, and функции, например), но это и не важно
                 dicts = [self.__single_algs_train_pred_times[alg_name] for alg_name,_ in algs_combination]
-                print(dicts)
+                #print(dicts)
                 return CollectionsInstruments.add_up_vals_of_similar_dicts(dicts)
 
             def calc_mean_q_metrics_for_algs_combi(algs_combi_det_q_metrics_values_on_folds, algs_combi_mean_perfomance_q_metrics):
                 def add_perfomance_q_metrics_in_results():
-                    dict_['pred_time'] = algs_combi_mean_perfomance_q_metrics['pred_time']
-                    dict_['train_time'] = algs_combi_mean_perfomance_q_metrics['train_time']
+                    dict_['pred_time'] = round(algs_combi_mean_perfomance_q_metrics['pred_time'], self.__perf_metrics_exported_vals_length)
+                    dict_['train_time'] = round(algs_combi_mean_perfomance_q_metrics['train_time'], self.__perf_metrics_exported_vals_length)
 
                 dict_ = { 'f1': 0, 'auc': 0, 'acc': 0, 'prec': 0, 'rec': 0}
                 n = len(algs_combi_det_q_metrics_values_on_folds)
                 for alg_q_metrics in algs_combi_det_q_metrics_values_on_folds:
                     new_values = alg_q_metrics.values()
                     #print(new_values)
-                    dict_ = {key:round(((value+new_val)/n), self.__metrics_fraction_length) for (key, value),new_val in 
+                    dict_ = {key:round(((value+new_val)/n), self.__det_metrics_exported_vals_length) for (key, value),new_val in 
                              zip(dict_.items(), new_values)} #среднее значение каждой метрики
                     #print(dict_)
                 add_perfomance_q_metrics_in_results()
