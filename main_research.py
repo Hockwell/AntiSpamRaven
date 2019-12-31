@@ -40,7 +40,7 @@ print('//////////////////////////// feature extraction done')
 algs = {
         'ComplementNB_Default': ComplementNBAlg_Default(),
         'SGDClf_Default': SGDAlg_Default(),
-        #'NearestCentroid_Default': NearestCentroidAlg_Default(),
+        'NearestCentroid_Default': NearestCentroidAlg_Default(),
         #'LinearSVC_Default': LinearSVCAlg_Default(),
         #'PassiveAggressiveClf_Default': PassiveAggressiveAlg_Default(),
         #'RidgeClf_Default': RidgeAlg_Default(),

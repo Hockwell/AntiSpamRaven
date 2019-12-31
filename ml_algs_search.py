@@ -28,11 +28,13 @@ class AlgsBestCombinationSearcher(object):
                 [metric_name + '=' + str(metric_val) for metric_name,metric_val in q_metrics.items()])
 
     @staticmethod
-    def __sort_algs_combis_by_q_metrics(algs_combis_with_q_metrics, keys_lambda = lambda el: el[1]['f1']):
-        #пример элемента словаря ('ComplementNB', {'f1': 0.977, 'acc': 0.989, 'prec': 0.954, 'rec': 1.0})
-        sorted_ = sorted(algs_combis_with_q_metrics.items(), key= keys_lambda, reverse=True)
-        #return collections.OrderedDict(sorted_)
-        return sorted_
+    def __sort_algs_combis_by_q_metrics(algs_combis_with_q_metrics, criterias = [('f1', True)]):
+        def multisort(data):
+            for key, enable_reverse in reversed(criterias):
+                data.sort(key=lambda el: el[1][key], reverse=enable_reverse)
+            return data
+
+        return  multisort(list(algs_combis_with_q_metrics.items()))
 
     @staticmethod
     def __log_results(algs_combis_with_q_metrics, results_from): #results - {algs_combi_name, {metrics}}
@@ -46,11 +48,12 @@ class AlgsBestCombinationSearcher(object):
 
         lfp = LogsFileProvider()
         f1_logger, recall_logger = switch_loggers()
-        sorted_by_f1_results = AlgsBestCombinationSearcher.__sort_algs_combis_by_q_metrics(algs_combis_with_q_metrics, 
-                                                                                         lambda el: (el[1]['f1'], el[1]['rec'], el[1]['pred_time']))
+        sorted_by_f1_results = AlgsBestCombinationSearcher.__sort_algs_combis_by_q_metrics(algs_combis_with_q_metrics, criterias = 
+                                                                                           [('f1', True), ('rec', True), ('pred_time', False)])
+
         AlgsBestCombinationSearcher.__export_searcher_results(sorted_by_f1_results, f1_logger)
         sorted_by_recall_results = AlgsBestCombinationSearcher.__sort_algs_combis_by_q_metrics(algs_combis_with_q_metrics,
-            lambda el:  (el[1]['rec'], el[1]['f1'], el[1]['pred_time']))
+            criterias =  [('rec', True), ('f1', True), ('pred_time', False)])
         AlgsBestCombinationSearcher.__export_searcher_results(sorted_by_recall_results, recall_logger)
         #print('////////////// logs done')
 

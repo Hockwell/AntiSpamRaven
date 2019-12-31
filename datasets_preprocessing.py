@@ -60,3 +60,16 @@ class Kagle2017DatasetPreprocessors(object):
         print('//////////////////////////// preprocessing done')
         #получаем корпус слов для каждого семпла - каждый семпл выражен списком необходимых слов (а не всех тех, что содержались в нём)
         return dataset_corpus,y
+
+#class EnronDatasetsPreprocessors(object): #подойдёт для всех Энроновских датасетов, сделай препроцессинг по параметру, который 
+#    #является номером датасета, который нужно препроцессить
+    
+#    PATH = r"C:\Users\volnu\OneDrive\Data\Dev\Src\Med\AntiSpamRaven\datasets\"
+#    PREPROC_CORPUS_FILE_PATH = PREPROC_FILES_DIR + "emails_kagle_2017_corpus.csv"
+#    PREPROC_Y_FILE_PATH = PREPROC_FILES_DIR + "emails_kagle_2017_y.csv"
+    
+#    def preprocessor_1(self):
+        
+#        print('//////////////////////////// preprocessing done')
+#        #получаем корпус слов для каждого семпла - каждый семпл выражен списком необходимых слов (а не всех тех, что содержались в нём)
+#        return dataset_corpus,y

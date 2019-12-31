@@ -2,6 +2,8 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import StratifiedShuffleSplit
 import numpy as np
 
+from operator import attrgetter
+
 class DatasetInstruments():
     @staticmethod
     def split_on_k_folds(X,y,k=10): #кол-во фолдов совпадает с кол-вом итераций разбиения

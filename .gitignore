@@ -4,3 +4,4 @@ datasets/datasets.txt
 datasets/names_manual.txt
 *.pyc
 *.log
+*.txt
