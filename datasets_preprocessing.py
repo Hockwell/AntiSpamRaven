@@ -35,6 +35,7 @@ class DatasetsPreprocessors(ABC):
 class Kagle2017DatasetPreprocessors(DatasetsPreprocessors): #эти классы должны быть Singleton-ами, но сделать наследование от класса DP
    #при этом будет невозможно. Реализация в виде статических классов более громоздкая. 
     def __init__(self):
+        super().__init__()
         self._DATASET_NAME = "emails_kagle_2017"
         self._DATASET_FILE_NAME = self._DATASET_NAME + self._DATA_FILE_EXTENSION
         self._DATASET_PATH = self._DATASETS_PATH + self._DATASET_FILE_NAME
@@ -79,7 +80,7 @@ class Kagle2017DatasetPreprocessors(DatasetsPreprocessors): #эти классы
         
         return self._preprocess(run_preprocessing)
 
-class EnronDatasetsPreprocessors(DatasetsPreprocessors):
+class EnronDatasetPreprocessors(DatasetsPreprocessors):
     def __init__(self):
         self._DATASET_NAME = "emails_enron_99-05"
         self._DATASET_FILE_NAME = self._DATASET_NAME + self._DATA_FILE_EXTENSION
