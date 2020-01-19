@@ -7,31 +7,48 @@ from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 
 import os
+from abc import ABC, abstractmethod
 
-PREPROC_FILES_DIR = r"C:\Users\volnu\OneDrive\Data\Dev\Src\Med\AntiSpamRaven\preproc_results\\"
+class DatasetsPreprocessors(ABC):
+    def __init__(self):
+        self._PREPROC_RESULTS_PATH = r"C:\Users\volnu\OneDrive\Data\Dev\Src\Med\AntiSpamRaven\preproc_results\\"
+        self._DATASETS_PATH = r"C:\Users\volnu\OneDrive\Data\Dev\Src\Med\AntiSpamRaven\datasets\\"
+        self._DATA_FILE_EXTENSION = ".csv"
 
-class Kagle2017DatasetPreprocessors(object):
-    #не сделан статическим, чтобы можно было создавать разные экземпляры с разными параметрами предобработки
-    #результаты препроцессинга сохраняются на диске, если их нет - проводим его заново
-    PATH = r"C:\Users\volnu\OneDrive\Data\Dev\Src\Med\AntiSpamRaven\datasets\emails_kagle_2017.csv"
-    PREPROC_CORPUS_FILE_PATH = PREPROC_FILES_DIR + "emails_kagle_2017_corpus.csv"
-    PREPROC_Y_FILE_PATH = PREPROC_FILES_DIR + "emails_kagle_2017_y.csv"
-    
-    def preprocessor_1(self):
-        dataset_corpus = None
-        raw_data = pd.read_csv(self.PATH)
+    def _preprocess(self, run_preprocessing_func): #осуществляет управлением сохранением результатов препроцессинга
+        def load_saved_preproc_data():
+            dataset_corpus = pd.read_csv(filepath_or_buffer = self._PREPROC_CORPUS_FILE_PATH, names = ['text'])['text']
+            y = pd.read_csv(filepath_or_buffer = self._PREPROC_Y_FILE_PATH, names = ['y'])['y']
+            return dataset_corpus,y
+
         try:
-            #print('corpus and y loading began')
-            dataset_corpus = pd.read_csv(filepath_or_buffer = self.PREPROC_CORPUS_FILE_PATH, names = ['text'])['text']
-            y = pd.read_csv(filepath_or_buffer = self.PREPROC_Y_FILE_PATH, names = ['y'])['y']
-            #print('corpus and y loading done')
+            dataset_corpus, y = load_saved_preproc_data()
         except IOError:
             try:
-                os.remove(self.PREPROC_CORPUS_FILE_PATH)
-                os.remove(self.PREPROC_Y_FILE_PATH)
+                os.remove(self._PREPROC_CORPUS_FILE_PATH)
+                os.remove(self._PREPROC_Y_FILE_PATH)
             except OSError:
                 pass
+            dataset_corpus, y = run_preprocessing_func()
+        return dataset_corpus,y
+
+class Kagle2017DatasetPreprocessors(DatasetsPreprocessors): #эти классы должны быть Singleton-ами, но сделать наследование от класса DP
+   #при этом будет невозможно. Реализация в виде статических классов более громоздкая. 
+    def __init__(self):
+        self._DATASET_NAME = "emails_kagle_2017"
+        self._DATASET_FILE_NAME = self._DATASET_NAME + self._DATA_FILE_EXTENSION
+        self._DATASET_PATH = self._DATASETS_PATH + self._DATASET_FILE_NAME
+
+    def preprocessor_1(self):
+        self._PREPROC_FILES_SUFFIX = "_preproc1"
+        self._PREPROC_CORPUS_FILE_NAME = self._DATASET_NAME + self._PREPROC_FILES_SUFFIX + "_corpus" + self._DATA_FILE_EXTENSION;
+        self._PREPROC_Y_FILE_NAME = self._DATASET_NAME + self._PREPROC_FILES_SUFFIX + "_y" + self._DATA_FILE_EXTENSION;
+        self._PREPROC_CORPUS_FILE_PATH = self._PREPROC_RESULTS_PATH + self._PREPROC_CORPUS_FILE_NAME
+        self._PREPROC_Y_FILE_PATH = self._PREPROC_RESULTS_PATH + self._PREPROC_Y_FILE_NAME
+
+        def run_preprocessing():
             nltk.download('stopwords')
+            raw_data = pd.read_csv(self._DATASET_PATH)
             #Checking for duplicates and removing them
             dataset = raw_data.drop_duplicates()
             #Checking for any null entries in the dataset
@@ -54,22 +71,32 @@ class Kagle2017DatasetPreprocessors(object):
             dataset_corpus = dataset['text'].apply(lambda sample_words:' '.join( list(map(lambda word: ps.stem(word), 
                             list(filter(lambda text: text not in set(stopwords.words('english')), sample_words)))) ))
             y = dataset.iloc[:, 1]
-            
-            dataset_corpus.to_csv(path_or_buf = self.PREPROC_CORPUS_FILE_PATH, index = False, columns = ['text'])
-            y.to_csv(path_or_buf = self.PREPROC_Y_FILE_PATH, index = False)
-        print('//////////////////////////// preprocessing done')
-        #получаем корпус слов для каждого семпла - каждый семпл выражен списком необходимых слов (а не всех тех, что содержались в нём)
-        return dataset_corpus,y
 
-#class EnronDatasetsPreprocessors(object): #подойдёт для всех Энроновских датасетов, сделай препроцессинг по параметру, который 
-#    #является номером датасета, который нужно препроцессить
-    
-#    PATH = r"C:\Users\volnu\OneDrive\Data\Dev\Src\Med\AntiSpamRaven\datasets\"
-#    PREPROC_CORPUS_FILE_PATH = PREPROC_FILES_DIR + "emails_kagle_2017_corpus.csv"
-#    PREPROC_Y_FILE_PATH = PREPROC_FILES_DIR + "emails_kagle_2017_y.csv"
-    
-#    def preprocessor_1(self):
+            dataset_corpus.to_csv(path_or_buf = self._PREPROC_CORPUS_FILE_PATH, index = False, columns = ['text'])
+            y.to_csv(path_or_buf = self._PREPROC_Y_FILE_PATH, index = False)
+            #получаем корпус слов для каждого семпла - каждый семпл выражен списком необходимых слов (а не всех тех, что содержались в нём)
+            return dataset_corpus,y
         
-#        print('//////////////////////////// preprocessing done')
-#        #получаем корпус слов для каждого семпла - каждый семпл выражен списком необходимых слов (а не всех тех, что содержались в нём)
-#        return dataset_corpus,y
+        return self._preprocess(run_preprocessing)
+
+class EnronDatasetsPreprocessors(DatasetsPreprocessors):
+    def __init__(self):
+        self._DATASET_NAME = "emails_enron_99-05"
+        self._DATASET_FILE_NAME = self._DATASET_NAME + self._DATA_FILE_EXTENSION
+        self._DATASET_PATH = self._DATASETS_PATH + self._DATASET_FILE_NAME
+
+    def preprocessor_1(self):
+        self._PREPROC_FILES_SUFFIX = "_preproc1"
+        self._PREPROC_CORPUS_FILE_NAME = self._DATASET_NAME + self._PREPROC_FILES_SUFFIX + "_corpus" + self._DATA_FILE_EXTENSION;
+        self._PREPROC_Y_FILE_NAME = self._DATASET_NAME + self._PREPROC_FILES_SUFFIX + "_y" + self._DATA_FILE_EXTENSION;
+        self._PREPROC_CORPUS_FILE_PATH = self._PREPROC_RESULTS_PATH + self._PREPROC_CORPUS_FILE_NAME
+        self._PREPROC_Y_FILE_PATH = self._PREPROC_RESULTS_PATH + self._PREPROC_Y_FILE_NAME
+
+        def run_preprocessing():
+            raw_data = pd.read_csv(filepath_or_buffer = self.PREPROC_CORPUS_FILE_PATH, header=0)
+            raw_data = raw_data.drop('Unnamed: 0', axis=1)
+            raw_data = raw_data.drop('label_num', axis=1)
+
+            #return dataset_corpus,y
+        
+        return self._preprocess(run_preprocessing)

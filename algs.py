@@ -10,7 +10,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors.nearest_centroid import NearestCentroid
 
-from abc import ABC, abstractmethod
+
 
 class MLAlgorithm():
     def learn(self, X_train, y_train):

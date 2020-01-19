@@ -29,9 +29,12 @@ def visualize_dataset(y):
 
 set_libs_settings()
 dataset_corpus, y = Kagle2017DatasetPreprocessors().preprocessor_1()
+print('//////////////////////////// preprocessing done')
 X = FeatureExtractorsForDatasets(dataset_corpus).extractor_tfidf_1() #corpus -> X
 print('//////////////////////////// feature extraction done')
 #X_train, y_train, X_test, y_test = DatasetInstruments.make_shuffle_stratified_split_on_k_folds(X,y, test_size = 0.25, n_splits=1)[0]
+
+
 #visualize_dataset(y)
 #visualize_dataset(y_train)
 #visualize_dataset(y_test)
@@ -40,7 +43,7 @@ print('//////////////////////////// feature extraction done')
 algs = {
         'ComplementNB_Default': ComplementNBAlg_Default(),
         'SGDClf_Default': SGDAlg_Default(),
-        'NearestCentroid_Default': NearestCentroidAlg_Default(),
+        #'NearestCentroid_Default': NearestCentroidAlg_Default(),
         #'LinearSVC_Default': LinearSVCAlg_Default(),
         #'PassiveAggressiveClf_Default': PassiveAggressiveAlg_Default(),
         #'RidgeClf_Default': RidgeAlg_Default(),
@@ -53,7 +56,7 @@ algs = {
         #'Perceptron_Default': PerceptronAlg_Default()
         }
 #run_single_algs_test()
-run_algs_best_combination_searcher(algs, X, y, k_folds=10)
+#run_algs_best_combination_searcher(algs, X, y, k_folds=10)
 
 #this function computes subset accuracy
 #accuracy_score(y_test, y_pred)
