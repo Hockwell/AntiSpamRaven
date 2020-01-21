@@ -145,7 +145,7 @@ class AlgsBestCombinationSearcher(object):
                 #не учитывается время, которое тратится на агрегацию прогнозов (or, and функции, например), но это и не важно
                 dicts = [self.__single_algs_train_pred_times[alg_name] for alg_name,_ in algs_combination]
                 #print(dicts)
-                return CollectionsInstruments.add_up_vals_of_similar_dicts(dicts)
+                return CollectionsInstruments.sum_vals_of_similar_dicts(dicts)
 
             def calc_mean_q_metrics_for_algs_combi(algs_combi_det_q_metrics_values_on_folds, algs_combi_mean_perfomance_q_metrics):
                 def add_perfomance_q_metrics_in_results():

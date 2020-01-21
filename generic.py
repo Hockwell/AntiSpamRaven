@@ -64,7 +64,7 @@ class DatasetInstruments():
             
 class CollectionsInstruments():
     @staticmethod
-    def add_up_vals_of_similar_dicts(dicts): #предполагается, что все словари имеют одинаковые ключи
+    def sum_vals_of_similar_dicts(dicts): #предполагается, что все словари имеют одинаковые ключи
         keys = dicts[0].keys()
         dicts_vals_sum = np.sum([list(dict.values()) for dict in dicts], axis=0)
         return dict(zip(keys, dicts_vals_sum))
