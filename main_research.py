@@ -33,8 +33,7 @@ dataset_corpus, y = EnronDatasetPreprocessors().preprocessor_1()
 print('//////////////////////////// preprocessing done')
 X = FeatureExtractors.extractor_tfidf_1(dataset_corpus) #corpus -> X
 print('//////////////////////////// feature extraction done')
-X_train, y_train, X_test, y_test = DatasetInstruments.make_shuffle_stratified_split_on_k_folds(X,y, test_size = 0.25, n_splits=1)[0]
-
+X_train, y_train, X_test, y_test = DatasetInstruments.make_shuffle_stratified_split_on_folds(X,y, test_size = 0.25, n_splits=1)[0]
 
 visualize_dataset(y)
 visualize_dataset(y_train)

@@ -1,10 +1,19 @@
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import StratifiedShuffleSplit
 import numpy as np
+import pandas as pd
 
 from operator import attrgetter
 
 class DatasetInstruments():
+    @staticmethod
+    def convert_dataset_from_pandas_to_numpy(X,y):
+        if type(X) is (pd.Series or pd.DataFrame):
+            X = X.values
+        if type(y) is (pd.Series or pd.DataFrame):
+            y = y.values
+        return X,y
+
     @staticmethod
     def split_on_k_folds(X,y,k=10): #кол-во фолдов совпадает с кол-вом итераций разбиения
             #folds: k-1 - train, k-ый - valid
@@ -39,7 +48,10 @@ class DatasetInstruments():
         return folds
 
     @staticmethod
-    def make_stratified_split_on_stratified_k_folds(X,y,k=10): #кол-во фолдов совпадает с кол-вом итераций разбиения
+    def make_stratified_split_on_stratified_k_folds(X,y,k=10): #X,y - by numpy only
+        #кол-во фолдов совпадает с кол-вом итераций разбиения
+        #размер тестового фолда- 1/k от всего датасета. 
+        X,y =  DatasetInstruments.convert_dataset_from_pandas_to_numpy(X,y)
         folds = []
         skf = StratifiedKFold(n_splits=k)
         for train_indices, valid_indices in skf.split(X, y):
@@ -51,9 +63,11 @@ class DatasetInstruments():
         return folds
 
     @staticmethod
-    def make_shuffle_stratified_split_on_k_folds(X,y, test_size = 0.2, n_splits=10): 
-        #кол-во фолдов (k) НЕ совпадает с кол-вом итераций разбиения,потому что алг. с перемешиванием.
+    def make_shuffle_stratified_split_on_folds(X,y, test_size = 0.2, n_splits=10): #X,y - by numpy only
+        #кол-во фолдов (k) НЕ совпадает с кол-вом итераций разбиения (n_splits),потому что алг. с перемешиванием (рандомизированный).
         #для задания размера фолда используется test_size
+        X,y =  DatasetInstruments.convert_dataset_from_pandas_to_numpy(X,y)
+
         folds = []
         sss = StratifiedShuffleSplit(test_size = test_size, n_splits=n_splits)
         for train_indeces, valid_indeces in sss.split(X, y):

@@ -29,7 +29,7 @@ class DatasetsPreprocessors(ABC):
             except OSError:
                 pass
             dataset_corpus, y = run_preprocessing_func()
-        return dataset_corpus,y
+        return dataset_corpus, y
 
 class Kagle2017DatasetPreprocessors(DatasetsPreprocessors): #эти классы должны быть Singleton-ами, но сделать наследование от класса DP
    #при этом будет невозможно. Реализация в виде статических классов более громоздкая. 
@@ -103,7 +103,7 @@ class EnronDatasetPreprocessors(DatasetsPreprocessors):
         
         def load_saved_preproc_data():
             dataset_corpus = pd.read_csv(filepath_or_buffer = self._PREPROC_CORPUS_FILE_PATH, names = ['text'])['text']
-            y = pd.read_csv(filepath_or_buffer = self._PREPROC_Y_FILE_PATH, names = ['y'])
+            y = pd.read_csv(filepath_or_buffer = self._PREPROC_Y_FILE_PATH, names = ['y'])['y']
             return dataset_corpus,y
 
         def run_preprocessing():
