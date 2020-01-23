@@ -35,15 +35,15 @@ X = FeatureExtractors.extractor_tfidf_1(dataset_corpus) #corpus -> X
 print('//////////////////////////// feature extraction done')
 X_train, y_train, X_test, y_test = DatasetInstruments.make_shuffle_stratified_split_on_folds(X,y, test_size = 0.25, n_splits=1)[0]
 
-visualize_dataset(y)
-visualize_dataset(y_train)
-visualize_dataset(y_test)
+#visualize_dataset(y)
+#visualize_dataset(y_train)
+#visualize_dataset(y_test)
 
 #search of best algs combination
 algs = {
         'ComplementNB_Default': ComplementNBAlg_Default(),
         'SGDClf_Default': SGDAlg_Default(),
-        #'NearestCentroid_Default': NearestCentroidAlg_Default(),
+        'NearestCentroid_Default': NearestCentroidAlg_Default(),
         #'LinearSVC_Default': LinearSVCAlg_Default(),
         #'PassiveAggressiveClf_Default': PassiveAggressiveAlg_Default(),
         #'RidgeClf_Default': RidgeAlg_Default(),

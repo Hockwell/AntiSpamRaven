@@ -12,13 +12,21 @@ from abc import ABC, abstractmethod
 
 #можно использовать родительский класс, а можно писать полностью свой препроцессор, в том числе без сохранения данных препроцессинга
 class DatasetsPreprocessors(ABC):
-    def __init__(self):
+    def __init__(self, dataset_name, preproc_files_suffix):
+        pass
+    def __init__(self, dataset_name, preproc_files_suffix):
         self._PREPROC_RESULTS_PATH = r"C:\Users\volnu\OneDrive\Data\Dev\Src\Med\AntiSpamRaven\preproc_results\\"
         self._DATASETS_PATH = r"C:\Users\volnu\OneDrive\Data\Dev\Src\Med\AntiSpamRaven\datasets\\"
         self._DATA_FILE_EXTENSION = ".csv"
+        self._DATASET_NAME = dataset_name
+        self._DATASET_FILE_NAME = self._DATASET_NAME + self._DATA_FILE_EXTENSION
+        self._DATASET_PATH = self._DATASETS_PATH + self._DATASET_FILE_NAME
+        self._PREPROC_FILES_SUFFIX = preproc_files_suffix
+        self._PREPROC_CORPUS_FILE_NAME = self._DATASET_NAME + self._PREPROC_FILES_SUFFIX + "_corpus" + self._DATA_FILE_EXTENSION;
+        self._PREPROC_Y_FILE_NAME = self._DATASET_NAME + self._PREPROC_FILES_SUFFIX + "_y" + self._DATA_FILE_EXTENSION;
+        self._PREPROC_CORPUS_FILE_PATH = self._PREPROC_RESULTS_PATH + self._PREPROC_CORPUS_FILE_NAME
+        self._PREPROC_Y_FILE_PATH = self._PREPROC_RESULTS_PATH + self._PREPROC_Y_FILE_NAME
 
-        #load_saved_preproc_data() не помещён сюда, ибо архитектурно мы могли сохранить больше данных после препроцессинга, это зависит 
-        #от датасета и извлекаемых далее фичей
     def _preprocess(self, load_saved_preproc_data_func, run_preprocessing_func): #осуществляет управлением сохранением результатов препроцессинга
         try:
             dataset_corpus, y = load_saved_preproc_data_func()
@@ -34,18 +42,9 @@ class DatasetsPreprocessors(ABC):
 class Kagle2017DatasetPreprocessors(DatasetsPreprocessors): #эти классы должны быть Singleton-ами, но сделать наследование от класса DP
    #при этом будет невозможно. Реализация в виде статических классов более громоздкая. 
     def __init__(self):
-        super().__init__()
-        self._DATASET_NAME = "emails_kagle_2017"
-        self._DATASET_FILE_NAME = self._DATASET_NAME + self._DATA_FILE_EXTENSION
-        self._DATASET_PATH = self._DATASETS_PATH + self._DATASET_FILE_NAME
+        pass     
 
     def preprocessor_1(self):
-        self._PREPROC_FILES_SUFFIX = "_preproc1"
-        self._PREPROC_CORPUS_FILE_NAME = self._DATASET_NAME + self._PREPROC_FILES_SUFFIX + "_corpus" + self._DATA_FILE_EXTENSION;
-        self._PREPROC_Y_FILE_NAME = self._DATASET_NAME + self._PREPROC_FILES_SUFFIX + "_y" + self._DATA_FILE_EXTENSION;
-        self._PREPROC_CORPUS_FILE_PATH = self._PREPROC_RESULTS_PATH + self._PREPROC_CORPUS_FILE_NAME
-        self._PREPROC_Y_FILE_PATH = self._PREPROC_RESULTS_PATH + self._PREPROC_Y_FILE_NAME
-
         def load_saved_preproc_data():
             dataset_corpus = pd.read_csv(filepath_or_buffer = self._PREPROC_CORPUS_FILE_PATH, names = ['text'])['text']
             y = pd.read_csv(filepath_or_buffer = self._PREPROC_Y_FILE_PATH, names = ['y'])['y']
@@ -84,23 +83,14 @@ class Kagle2017DatasetPreprocessors(DatasetsPreprocessors): #эти классы
             save_preproc_data()
             #получаем корпус слов для каждого семпла - каждый семпл выражен списком необходимых слов (а не всех тех, что содержались в нём)
             return dataset_corpus,y
-        
+        super().__init__("emails_kagle_2017" , "_preproc1")
         return self._preprocess(load_saved_preproc_data, run_preprocessing)
 
 class EnronDatasetPreprocessors(DatasetsPreprocessors):
     def __init__(self):
-        super().__init__()
-        self._DATASET_NAME = "emails_enron_99-05"
-        self._DATASET_FILE_NAME = self._DATASET_NAME + self._DATA_FILE_EXTENSION
-        self._DATASET_PATH = self._DATASETS_PATH + self._DATASET_FILE_NAME
+        pass
 
     def preprocessor_1(self):
-        self._PREPROC_FILES_SUFFIX = "_preproc1"
-        self._PREPROC_CORPUS_FILE_NAME = self._DATASET_NAME + self._PREPROC_FILES_SUFFIX + "_corpus" + self._DATA_FILE_EXTENSION;
-        self._PREPROC_Y_FILE_NAME = self._DATASET_NAME + self._PREPROC_FILES_SUFFIX + "_y" + self._DATA_FILE_EXTENSION;
-        self._PREPROC_CORPUS_FILE_PATH = self._PREPROC_RESULTS_PATH + self._PREPROC_CORPUS_FILE_NAME
-        self._PREPROC_Y_FILE_PATH = self._PREPROC_RESULTS_PATH + self._PREPROC_Y_FILE_NAME
-        
         def load_saved_preproc_data():
             dataset_corpus = pd.read_csv(filepath_or_buffer = self._PREPROC_CORPUS_FILE_PATH, names = ['text'])['text']
             y = pd.read_csv(filepath_or_buffer = self._PREPROC_Y_FILE_PATH, names = ['y'])['y']
@@ -133,5 +123,45 @@ class EnronDatasetPreprocessors(DatasetsPreprocessors):
             y = dataset.iloc[:, 1]
             save_preproc_data()
             return dataset['text'],y
-        
+        super().__init__("emails_enron_99-05" , "_preproc1")
+        return self._preprocess(load_saved_preproc_data, run_preprocessing)
+
+class KagleSMS2016DatasetPreprocessors(DatasetsPreprocessors):
+    def __init__(self):
+        pass
+
+    def preprocessor_1(self):     
+        def load_saved_preproc_data():
+            dataset_corpus = pd.read_csv(filepath_or_buffer = self._PREPROC_CORPUS_FILE_PATH, names = ['text'])['text']
+            y = pd.read_csv(filepath_or_buffer = self._PREPROC_Y_FILE_PATH, names = ['y'])['y']
+            return dataset_corpus,y
+
+        def run_preprocessing():
+            def mark_useless_samples(): #as np.nan
+                #dataset['text'].replace('', np.nan, inplace=True)
+                mask = dataset['text'].str.len() > 3
+                return dataset[mask]
+
+            def save_preproc_data():
+                dataset['text'].to_csv(path_or_buf = self._PREPROC_CORPUS_FILE_PATH, index = False, columns = ['text'])
+                y.to_csv(path_or_buf = self._PREPROC_Y_FILE_PATH, index = False)
+            
+            nltk.download('stopwords')
+            raw_data = pd.read_csv(self._DATASET_PATH)
+            raw_data = raw_data.drop('Unnamed: 0', axis=1)
+            raw_data = raw_data.drop('label', axis=1)
+            #print(raw_data.head())
+            dataset = raw_data.drop_duplicates()
+            dataset['text'] = dataset['text'].map(lambda sample: sample[8:]) #delete "Subject:"
+            dataset['text'] = dataset['text'].map(lambda sample_words: re.sub('[^a-zA-Z0-9]+', ' ',sample_words)).apply(lambda x: (x.lower()).split())
+            ps = PorterStemmer()
+            dataset['text'] = dataset['text'].apply(lambda sample_words:' '.join( list(map(lambda word: ps.stem(word), 
+                            list(filter(lambda text: text not in set(stopwords.words('english')), sample_words)))) ))
+            #удалим семплы длинной <3 из датасета
+            dataset = mark_useless_samples()
+            dataset = dataset.dropna(axis=0)
+            y = dataset.iloc[:, 1]
+            save_preproc_data()
+            return dataset['text'],y
+        super().__init__("sms_kagle_2016" , "_preproc1")
         return self._preprocess(load_saved_preproc_data, run_preprocessing)
