@@ -28,10 +28,12 @@ def visualize_dataset(y):
     sns.countplot(y=y)
 
 set_libs_settings()
-#dataset_corpus, y = Kagle2017DatasetPreprocessors().preprocessor_1()
-dataset_corpus, y = EnronDatasetPreprocessors().preprocessor_1()
+dataset_corpus, y = Kagle2017DatasetPreprocessors().preprocessor_1()
+#dataset_corpus, y = EnronDatasetPreprocessors().preprocessor_1()
+#dataset_corpus, y = KagleSMS2016DatasetPreprocessors().preprocessor_1()
 print('//////////////////////////// preprocessing done')
-X = FeatureExtractors.extractor_tfidf_1(dataset_corpus) #corpus -> X
+X = FeatureExtractors.extractor_tfidf_1(dataset_corpus, ngram_range=(1,2)) #corpus -> X
+print('samples x features: ', X.shape)
 print('//////////////////////////// feature extraction done')
 X_train, y_train, X_test, y_test = DatasetInstruments.make_shuffle_stratified_split_on_folds(X,y, test_size = 0.25, n_splits=1)[0]
 
@@ -44,19 +46,19 @@ algs = {
         'ComplementNB_Default': ComplementNBAlg_Default(),
         'SGDClf_Default': SGDAlg_Default(),
         'NearestCentroid_Default': NearestCentroidAlg_Default(),
-        #'LinearSVC_Default': LinearSVCAlg_Default(),
-        #'PassiveAggressiveClf_Default': PassiveAggressiveAlg_Default(),
-        #'RidgeClf_Default': RidgeAlg_Default(),
-        #'KNeighborsClf_Default': KNeighborsAlg_Default(),
-        #'RandomForest_Default': RandomForestAlg_Default(),
-        #'RandomForest_Mod1': RandomForestAlg_Mod1(),
-        #'RandomForest_Mod2': RandomForestAlg_Mod2(),
-        #'RandomForest_Mod3': RandomForestAlg_Mod3(),
-        #'RandomForest_Mod4': RandomForestAlg_Mod4(),
-        #'Perceptron_Default': PerceptronAlg_Default()
+        'LinearSVC_Default': LinearSVCAlg_Default(),
+        'PassiveAggressiveClf_Default': PassiveAggressiveAlg_Default(),
+        'RidgeClf_Default': RidgeAlg_Default(),
+        'KNeighborsClf_Default': KNeighborsAlg_Default(),
+        'RandomForest_Default': RandomForestAlg_Default(),
+        'RandomForest_Mod1': RandomForestAlg_Mod1(),
+        'RandomForest_Mod2': RandomForestAlg_Mod2(),
+        'RandomForest_Mod3': RandomForestAlg_Mod3(),
+        'RandomForest_Mod4': RandomForestAlg_Mod4(),
+        'Perceptron_Default': PerceptronAlg_Default()
         }
-run_single_algs_test()
-#run_algs_best_combination_searcher(algs, X, y, k_folds=10)
+#run_single_algs_test()
+run_algs_best_combination_searcher(algs, X, y, k_folds=10)
 
 #this function computes subset accuracy
 #accuracy_score(y_test, y_pred)
