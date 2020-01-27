@@ -1,7 +1,6 @@
 #ODC - OptimalDisjunctiveCombination
 #OCC - OptimalConjuctiveCombination
 #группа классов ищет наилучшую комбинацию алгоритмов ML.
-#для поиска используется кастомная кросс-валидация и варианты объединения детектов
 
 import numpy as np
 
@@ -198,4 +197,3 @@ class AlgsBestCombinationSearcher(object):
         algs_combis_with_q_metrics = dict(zip(self.__get_algs_combinations_names(run_OCC), algs_combis_quality_metrics))
         print('////////////////// ODC_OCC Searcher done')
         return algs_combis_with_q_metrics
-

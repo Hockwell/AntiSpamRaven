@@ -28,9 +28,9 @@ def visualize_dataset(y):
     sns.countplot(y=y)
 
 set_libs_settings()
-dataset_corpus, y = Kagle2017DatasetPreprocessors().preprocessor_1()
+#dataset_corpus, y = Kagle2017DatasetPreprocessors().preprocessor_1()
 #dataset_corpus, y = EnronDatasetPreprocessors().preprocessor_1()
-#dataset_corpus, y = KagleSMS2016DatasetPreprocessors().preprocessor_1()
+dataset_corpus, y = KagleSMS2016DatasetPreprocessors().preprocessor_1()
 print('//////////////////////////// preprocessing done')
 X = FeatureExtractors.extractor_tfidf_1(dataset_corpus, ngram_range=(1,2)) #corpus -> X
 print('samples x features: ', X.shape)
