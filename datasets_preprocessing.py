@@ -30,8 +30,8 @@ class DatasetPreprocessors(ABC):
     @staticmethod
     def _run_general_preprocessor_1(raw_data, text_column): #работает с датасетами, где есть лишь столбцы label и text
         def mark_useless_samples(): #as np.nan
-            #dataset['text'].replace('', np.nan, inplace=True)
-            mask = dataset[text_column].str.len() > 3
+            dataset['text'].replace('', np.nan, inplace=True)
+            mask = dataset[text_column].str.len() > 2
             return dataset[mask]
         nltk.download('stopwords')
         dataset = raw_data.drop_duplicates()

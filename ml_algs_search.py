@@ -76,19 +76,22 @@ class AlgsBestCombinationSearcher(object):
             self.__single_algs_train_pred_times[alg_name] = {'train_time': np.mean(train_times_on_folds), 'pred_time': np.mean(pred_time_on_folds)}
         print('////////////////// test_single_algs_on_folds() done')
 
-    def run(self, X, y, k_folds, algs):
+    def run(self, X, y, k_folds, algs, enable_OCC = False):
+        def combine_odc_occ_results():
+            odc_occ_results = dict(odc_results)
+            odc_occ_results.update(occ_results)
+            AlgsBestCombinationSearcher.__log_results(odc_occ_results, results_from = 3)
+
         self.__tune(X, y, k_folds, algs)
         self.__test_single_algs_on_folds() #dict {alg_name:[y_pred_fold_i]}
 
         odc_results = self.__run_ODC_OCC_searcher(run_OCC = False)
         AlgsBestCombinationSearcher.__log_results(odc_results, results_from = 2)
 
-        occ_results = self.__run_ODC_OCC_searcher(run_OCC = True)
-        AlgsBestCombinationSearcher.__log_results(occ_results, results_from = 1)
-
-        odc_occ_results = dict(odc_results)
-        odc_occ_results.update(occ_results)
-        AlgsBestCombinationSearcher.__log_results(odc_occ_results, results_from = 3)
+        if (enable_OCC):
+            occ_results = self.__run_ODC_OCC_searcher(run_OCC = True)
+            AlgsBestCombinationSearcher.__log_results(occ_results, results_from = 1)
+            combine_odc_occ_results()
 
     def __tune(self, X, y, k_folds, algs, combination_length = 4, det_metrics_exported_vals_length = 4, perf_metrics_exported_vals_length = 7): 
         #Сочетания без повторений (n,k) для всех k до заданного - это и есть все подмножества

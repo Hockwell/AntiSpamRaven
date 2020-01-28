@@ -10,8 +10,6 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors.nearest_centroid import NearestCentroid
 
-
-
 class MLAlgorithm():
     def learn(self, X_train, y_train):
         self._clf.fit(X_train , y_train)
@@ -37,11 +35,15 @@ class NearestCentroidAlg_Default(MLAlgorithm):
 
 class SGDAlg_Default(MLAlgorithm):
     def __init__(self):
-        self._clf = SGDClassifier()
+        self._clf = SGDClassifier() #SVM с градиентным спуском для целевой функции
     
 class LinearSVCAlg_Default(MLAlgorithm):
     def __init__(self):
         self._clf = LinearSVC()
+
+#class LinearSVCAlg_RBF(MLAlgorithm):
+#    def __init__(self):
+#        self._clf = LinearSVC()
     
 class PassiveAggressiveAlg_Default(MLAlgorithm):
     def __init__(self):
@@ -74,8 +76,8 @@ class RandomForestAlg_Mod4(MLAlgorithm):
 class RandomForestAlg_Default(MLAlgorithm):
     def __init__(self):
         self._clf = RandomForestClassifier(n_estimators=100)
-
-class PerceptronAlg_Default(MLAlgorithm):
+        
+class PerceptronAlg_Default(MLAlgorithm): # is equivalent to SGDClassifier(loss="perceptron", eta0=1, learning_rate="constant", penalty=None).
     def __init__(self):
         self._clf = Perceptron()
 
@@ -88,10 +90,6 @@ class PerceptronAlg_Default(MLAlgorithm):
 #        self._clf = Perceptron()
 
 #class AdaBoostAlg_Default(MLAlgorithm):
-#    def __init__(self):
-#        self._clf = Perceptron()
-
-#class CatBoostAlg_Default(MLAlgorithm):
 #    def __init__(self):
 #        self._clf = Perceptron()
 
