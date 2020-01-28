@@ -36,8 +36,9 @@ class AlgsBestCombinationSearcher(object):
         return  multisort(list(algs_combis_with_q_metrics.items()))
 
     @staticmethod
-    def __log_results(algs_combis_with_q_metrics, results_from): #results - {algs_combi_name, {metrics}}
+    def __export_results(algs_combis_with_q_metrics, results_from): #results - {algs_combi_name, {metrics}}
         def switch_loggers():
+            lfp = LogsFileProvider()
             if (results_from == 1):
                 return lfp.ml_OCC_sorted_f1, lfp.ml_OCC_sorted_recall
             if (results_from == 2):
@@ -45,16 +46,14 @@ class AlgsBestCombinationSearcher(object):
             if (results_from == 3):
                 return lfp.ml_ODC_OCC_sorted_f1, lfp.ml_ODC_OCC_sorted_recall
 
-        lfp = LogsFileProvider()
-        f1_logger, recall_logger = switch_loggers()
-        sorted_by_f1_results = AlgsBestCombinationSearcher.__sort_algs_combis_by_q_metrics(algs_combis_with_q_metrics, criterias = 
-                                                                                           [('f1', True), ('rec', True), ('pred_time', False)])
+        def export_sorted_by(logger, criterias_list):
+            sorted_results = AlgsBestCombinationSearcher.__sort_algs_combis_by_q_metrics(algs_combis_with_q_metrics, 
+                                                                                         criterias = criterias_list)
+            AlgsBestCombinationSearcher.__export_searcher_results(sorted_results, logger)
 
-        AlgsBestCombinationSearcher.__export_searcher_results(sorted_by_f1_results, f1_logger)
-        sorted_by_recall_results = AlgsBestCombinationSearcher.__sort_algs_combis_by_q_metrics(algs_combis_with_q_metrics,
-            criterias =  [('rec', True), ('f1', True), ('pred_time', False)])
-        AlgsBestCombinationSearcher.__export_searcher_results(sorted_by_recall_results, recall_logger)
-        #print('////////////// logs done')
+        f1_logger, recall_logger = switch_loggers()
+        export_sorted_by(f1_logger, [('f1', True), ('rec', True), ('pred_time', False)])
+        #export_sorted_by(recall_logger, [('rec', True), ('f1', True), ('pred_time', False)]) #можно включить
 
     def __test_single_algs_on_folds(self): #запоминаем результаты, данные каждым алгоритмом в отдельности, на каждом фолде
         for alg_name,alg_obj in self.__algs:
@@ -80,17 +79,17 @@ class AlgsBestCombinationSearcher(object):
         def combine_odc_occ_results():
             odc_occ_results = dict(odc_results)
             odc_occ_results.update(occ_results)
-            AlgsBestCombinationSearcher.__log_results(odc_occ_results, results_from = 3)
+            AlgsBestCombinationSearcher.__export_results(odc_occ_results, results_from = 3)
 
         self.__tune(X, y, k_folds, algs)
         self.__test_single_algs_on_folds() #dict {alg_name:[y_pred_fold_i]}
 
         odc_results = self.__run_ODC_OCC_searcher(run_OCC = False)
-        AlgsBestCombinationSearcher.__log_results(odc_results, results_from = 2)
+        AlgsBestCombinationSearcher.__export_results(odc_results, results_from = 2)
 
         if (enable_OCC):
             occ_results = self.__run_ODC_OCC_searcher(run_OCC = True)
-            AlgsBestCombinationSearcher.__log_results(occ_results, results_from = 1)
+            AlgsBestCombinationSearcher.__export_results(occ_results, results_from = 1)
             combine_odc_occ_results()
 
     def __tune(self, X, y, k_folds, algs, combination_length = 4, det_metrics_exported_vals_length = 4, perf_metrics_exported_vals_length = 7): 
