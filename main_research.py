@@ -31,6 +31,8 @@ set_libs_settings()
 #dataset_corpus, y = Kagle2017DatasetPreprocessors().preprocessor_1()
 #dataset_corpus, y = EnronDatasetPreprocessors().preprocessor_1()
 dataset_corpus, y = KagleSMS2016DatasetPreprocessors().preprocessor_1()
+print("Соотношение классов:")
+print(DatasetInstruments.calc_classes_ratio(y))
 print('//////////////////////////// preprocessing done')
 X = FeatureExtractors.extractor_tfidf_1(dataset_corpus, ngram_range=(1,2)) #corpus -> X
 print('samples x features: ', X.shape)
@@ -45,10 +47,10 @@ X_train, y_train, X_test, y_test = DatasetInstruments.make_shuffle_stratified_sp
 algs = {
         'ComplementNB_Default': ComplementNBAlg_Default(),
         'SGDClf_Default': SGDAlg_Default(),
-        #'NearestCentroid_Default': NearestCentroidAlg_Default(),
-        #'LinearSVC_Default': LinearSVCAlg_Default(),
-        #'PassiveAggressiveClf_Default': PassiveAggressiveAlg_Default(),
-        #'RidgeClf_Default': RidgeAlg_Default(),
+        'NearestCentroid_Default': NearestCentroidAlg_Default(),
+        'LinearSVC_Default': LinearSVCAlg_Default(),
+        'PassiveAggressiveClf_Default': PassiveAggressiveAlg_Default(),
+        'RidgeClf_Default': RidgeAlg_Default(),
         #'KNeighborsClf_Default': KNeighborsAlg_Default(),
         #'RandomForest_Default': RandomForestAlg_Default(),
         #'RandomForest_Mod1': RandomForestAlg_Mod1(),

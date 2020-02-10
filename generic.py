@@ -4,8 +4,10 @@ import numpy as np
 import pandas as pd
 
 from operator import attrgetter
+from itertools import chain, combinations
+from abc import ABC
 
-class DatasetInstruments():
+class DatasetInstruments(ABC):
     @staticmethod
     def convert_dataset_from_pandas_to_numpy(X,y):
         if type(X) is (pd.Series or pd.DataFrame):
@@ -75,10 +77,19 @@ class DatasetInstruments():
             y_trainFolds, y_validFold = y[train_indeces], y[valid_indeces]
             folds.append((X_trainFolds, y_trainFolds, X_validFold, y_validFold))
         return folds
-            
-class CollectionsInstruments():
+    @staticmethod
+    def calc_classes_ratio(y):
+        return y.value_counts(normalize=True)
+        
+class CollectionsInstruments(ABC):
     @staticmethod
     def sum_vals_of_similar_dicts(dicts): #предполагается, что все словари имеют одинаковые ключи
         keys = dicts[0].keys()
         dicts_vals_sum = np.sum([list(dict.values()) for dict in dicts], axis=0)
         return dict(zip(keys, dicts_vals_sum))
+
+class MathInstruments(ABC):
+    @staticmethod
+    def make_subsets(iterable,k):
+        list_ = list(iterable)
+        return list(chain.from_iterable(combinations(list_,k_i) for k_i in range(1,k))) 
