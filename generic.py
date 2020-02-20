@@ -83,10 +83,18 @@ class DatasetInstruments(ABC):
         
 class CollectionsInstruments(ABC):
     @staticmethod
-    def sum_vals_of_similar_dicts(dicts): #предполагается, что все словари имеют одинаковые ключи
+    def sum_vals_of_similar_dicts(dicts, decimal_places): #предполагается, что все словари имеют одинаковые ключи
         keys = dicts[0].keys()
-        dicts_vals_sum = np.sum([list(dict.values()) for dict in dicts], axis=0)
-        return dict(zip(keys, dicts_vals_sum))
+        dicts_sum_vals =  np.around(np.sum([list(dict.values()) for dict in dicts], axis=0), decimal_places)
+        return dict(zip(keys, dicts_sum_vals))
+
+    @staticmethod
+    def merge_dicts(dict1, dict2):
+        return {**dict1, **dict2}
+
+    @staticmethod
+    def round_dict_vals(dict_, decimal_places):
+        return dict(zip(dict_.keys(), list(np.around(list(dict_.values()), decimal_places))))
 
 class MathInstruments(ABC):
     @staticmethod

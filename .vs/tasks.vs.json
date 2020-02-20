@@ -1,0 +1,10 @@
+{
+  "version": "0.2.1",
+  "tasks": [
+    {
+      "taskLabel": "задача-ml_algs_search",
+      "appliesTo": "ml_algs_search.py",
+      "type": "launch"
+    }
+  ]
+}

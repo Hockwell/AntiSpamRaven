@@ -2,13 +2,15 @@
 from sklearn.naive_bayes import MultinomialNB, ComplementNB
 from sklearn.neighbors import NearestCentroid
 from sklearn.linear_model import SGDClassifier
-from sklearn.svm import LinearSVC
+from sklearn import svm
 from sklearn.linear_model import PassiveAggressiveClassifier
 from sklearn.linear_model import RidgeClassifier
 from sklearn.linear_model import Perceptron
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors.nearest_centroid import NearestCentroid
+
+import numpy as np
 
 class MLAlgorithm():
     def learn(self, X_train, y_train):
@@ -35,15 +37,35 @@ class NearestCentroidAlg_Default(MLAlgorithm):
 
 class SGDAlg_Default(MLAlgorithm):
     def __init__(self):
-        self._clf = SGDClassifier() #SVM с градиентным спуском для целевой функции
-    
-class LinearSVCAlg_Default(MLAlgorithm):
-    def __init__(self):
-        self._clf = LinearSVC()
+        self._clf = SGDClassifier() #LinearSVC с градиентным спуском
 
-#class LinearSVCAlg_RBF(MLAlgorithm):
-#    def __init__(self):
-#        self._clf = LinearSVC()
+class SGDAlg_AdaptiveIters(MLAlgorithm):
+    def __init__(self):
+        pass
+
+    def learn(self, X_train, y_train):
+        self._clf = SGDClassifier(max_iter=np.ceil(10**6 / X_train.shape[0])) #формула из рекомендаций создателей библиотеки
+        self._clf.fit(X_train , y_train)
+
+class ASGDAlg_Default(MLAlgorithm):
+    def __init__(self):
+        self._clf = SGDClassifier(average=True)
+
+class LinearSVCAlg_Default(MLAlgorithm): #SVM с линейной функцией
+    def __init__(self):
+        self._clf = svm.LinearSVC(loss='squared_hinge')
+
+class LinearSVCAlg_Balanced(MLAlgorithm): 
+    def __init__(self):
+        self._clf = svm.LinearSVC(class_weight='balanced', loss='squared_hinge')
+
+class SVCAlg_RBF_Default(MLAlgorithm):
+    def __init__(self):
+        self._clf = svm.SVC(kernel='rbf', gamma='scale')
+
+class SVCAlg_RBF_Aggr(MLAlgorithm):
+    def __init__(self):
+        self._clf = svm.SVC(kernel='rbf', gamma='scale', C=0.01)
     
 class PassiveAggressiveAlg_Default(MLAlgorithm):
     def __init__(self):
