@@ -165,7 +165,7 @@ class AlgsBestCombinationSearcher(object):
         print('////////////////// test_single_algs_on_folds() done')
         return single_algs_y_pred
 
-    def run(self, X, y, k_folds, algs, enable_OCC = False):
+    def run(self, X, y, k_folds, algs, enable_OCC = True):
         def export_odc_occ_general_results():
             odc_occ_combis = self.__algs_SC + self.__algs_DC + self.__algs_CC
             self.__export_results(odc_occ_combis, 3)
@@ -181,7 +181,8 @@ class AlgsBestCombinationSearcher(object):
             self.__export_results(self.__algs_SC + self.__algs_CC, 1)
             export_odc_occ_general_results()
 
-        self.__export_results(self.__algs_SC, 4, False) #вызывать до рассчетов комбинаций нельзя, ибо значения метрик будут не округленными (округление невозмож)
+        self.__export_results(self.__algs_SC, 4, False) #вызывать до рассчетов комбинаций нельзя, 
+        #ибо значения метрик будут не округленными (округление не производится сразу, чтобы метрики комбинаций рассчитывались с высокой точностью)
 
     #det - detection, perf - perfomance
     def __tune(self, X, y, k_folds, algs, enable_OCC, combination_length = 4, 

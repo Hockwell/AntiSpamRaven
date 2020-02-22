@@ -27,13 +27,16 @@ class DatasetPreprocessors(ABC):
         self._PREPROC_CORPUS_FILE_PATH = self._PREPROC_RESULTS_PATH + self._PREPROC_CORPUS_FILE_NAME
         self._PREPROC_Y_FILE_PATH = self._PREPROC_RESULTS_PATH + self._PREPROC_Y_FILE_NAME
 
-    #@staticmethod
-    #def delete_custom_stopwords_from_samples()
     @staticmethod
-    def _run_general_preprocessor_1(raw_data, text_column): #работает с датасетами, где есть лишь столбцы label и text
+    def crop_samples_from_left(trimmed_text, dataset, col_with_text):
+        dataset.loc[:,(col_with_text)] = dataset.loc[:,(col_with_text)].map(lambda sample: sample[len(trimmed_text):])
+        return dataset
+
+    @staticmethod
+    def _run_general_preprocessor_1(raw_data, col_with_text): #работает с датасетами, где есть лишь столбцы label и text
         def mark_useless_samples(): #as np.nan(#)
-            dataset['text'].replace('', np.nan, inplace=True)
-            mask = dataset[text_column].str.len() > 2
+            dataset.loc[:,(col_with_text)].replace('', np.nan, inplace=True)
+            mask = dataset[col_with_text].str.len() > 2
             return dataset[mask]
         nltk.download('stopwords')
         dataset = raw_data.drop_duplicates()
@@ -42,24 +45,24 @@ class DatasetPreprocessors(ABC):
         #Replace money symbols with 'moneysymb'
         #Replace phone numbers with 'phonenumbr'
         #Replace numbers with 'numbr'
-        dataset[text_column] = dataset[text_column].map(lambda sample_words: re.sub('\b[\w\-.]+?@\w+?\.\w{2,4}\b', 'emailaddr' ,sample_words))
-        dataset[text_column] = dataset[text_column].map(lambda sample_words: re.sub('(http[s]?\S+)|(\w+\.[A-Za-z]{2,4}\S*)', 'httpaddr' ,sample_words))
-        dataset[text_column] = dataset[text_column].map(lambda sample_words: re.sub('£|\$', 'moneysymb' ,sample_words))
-        dataset[text_column] = dataset[text_column].map(lambda sample_words: re.sub('\b(\+\d{1,2}\s)?\d?[\-(.]?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b', 'phonenumbr', sample_words))
-        dataset[text_column] = dataset[text_column].map(lambda sample_words: re.sub('\d+(\.\d+)?', 'numbr' ,sample_words))
+        dataset.loc[:,(col_with_text)] = dataset.loc[:,(col_with_text)].map(lambda sample_words: re.sub('\b[\w\-.]+?@\w+?\.\w{2,4}\b', 'emailaddr' ,sample_words))
+        dataset.loc[:,(col_with_text)] = dataset.loc[:,(col_with_text)].map(lambda sample_words: re.sub('(http[s]?\S+)|(\w+\.[A-Za-z]{2,4}\S*)', 'httpaddr' ,sample_words))
+        dataset.loc[:,(col_with_text)] = dataset.loc[:,(col_with_text)].map(lambda sample_words: re.sub('£|\$', 'moneysymb' ,sample_words))
+        dataset.loc[:,(col_with_text)] = dataset.loc[:,(col_with_text)].map(lambda sample_words: re.sub('\b(\+\d{1,2}\s)?\d?[\-(.]?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b', 'phonenumbr', sample_words))
+        dataset.loc[:,(col_with_text)] = dataset.loc[:,(col_with_text)].map(lambda sample_words: re.sub('\d+(\.\d+)?', 'numbr' ,sample_words))
         #Remove all punctuations
-        dataset[text_column] = dataset[text_column].map(lambda sample_words: re.sub('[^\w\d\s]', ' ' ,sample_words))
+        dataset.loc[:,(col_with_text)] = dataset.loc[:,(col_with_text)].map(lambda sample_words: re.sub('[^\w\d\s]', ' ' ,sample_words))
         #всё, что не является англ. буквами и цифрами, заменяем на пробелы или не меняем, если под шаблон не попадает
             #далее делаем весь текст строчного регистра и делим его на слова по пробелам - получаем список разделенных пробелами слов/цифр
             #теперь dataset - это семплы из списков слов
-        dataset[text_column] = dataset[text_column].map(lambda sample_words: re.sub('[^a-zA-Z0-9]+', ' ',sample_words)).apply(lambda x: (x.lower()).split())
+        dataset.loc[:,(col_with_text)] = dataset.loc[:,(col_with_text)].map(lambda sample_words: re.sub('[^a-zA-Z0-9]+', ' ',sample_words)).apply(lambda x: (x.lower()).split())
         #используя алгоритм стемминга Портера
         ps = PorterStemmer()
         #Удаляем из списка слов каждого семпла стоп-слова (используя ntlk). Технически мы из старых семплов 
             #делаем новые, с отфильтрованным контентом, далее пропускаем через стемминг с помощью map(), имеем список слов,
             #потом соединяем эл-ты списка пробелами - получаем на один семпл одну строку 
             #со словами вместо списка слов: .join(map(lambda_a,list from lambda_b(sample_words)))
-        dataset[text_column] = dataset[text_column].apply(lambda sample_words:' '.join( list(map(lambda word: ps.stem(word), 
+        dataset.loc[:,(col_with_text)] = dataset.loc[:,(col_with_text)].apply(lambda sample_words:' '.join( list(map(lambda word: ps.stem(word), 
                         list(filter(lambda text: text not in set(stopwords.words('english')), sample_words)))) ))
         dataset = mark_useless_samples()
         dataset = dataset.dropna(axis=0)
@@ -90,17 +93,18 @@ class Kagle2017DatasetPreprocessors(DatasetPreprocessors): #эти классы 
 
         def run_preprocessing():
             def save_preproc_data():
-                dataset['text'].to_csv(path_or_buf = self._PREPROC_CORPUS_FILE_PATH, index = False, columns = ['text'])
+                dataset.loc[:,('text')].to_csv(path_or_buf = self._PREPROC_CORPUS_FILE_PATH, index = False, columns = ['text'])
                 y.to_csv(path_or_buf = self._PREPROC_Y_FILE_PATH, index = False)
 
             raw_data = pd.read_csv(self._DATASET_PATH)
 
             dataset = DatasetPreprocessors._run_general_preprocessor_1(raw_data, 'text')
+            dataset = DatasetPreprocessors.crop_samples_from_left('subject', dataset, 'text')
             y = dataset.iloc[:, 1]
 
             save_preproc_data()
             #получаем корпус слов для каждого семпла - каждый семпл выражен списком необходимых слов (а не всех тех, что содержались в нём)
-            return dataset['text'],y
+            return dataset.loc[:,('text')],y
         super().__init__("emails_kagle_2017" , "_preproc1")
         return self._preprocess(load_saved_preproc_data, run_preprocessing)
 
@@ -117,20 +121,21 @@ class EnronDatasetPreprocessors(DatasetPreprocessors):
         def run_preprocessing():
             def mark_useless_samples(): #as np.nan
                 #dataset['text'].replace('', np.nan, inplace=True)
-                mask = dataset['text'].str.len() > 3
+                mask = dataset.loc[:,('text')].str.len() > 3
                 return dataset[mask]
 
             def save_preproc_data():
-                dataset['text'].to_csv(path_or_buf = self._PREPROC_CORPUS_FILE_PATH, index = False, columns = ['text'])
+                dataset.loc[:,('text')].to_csv(path_or_buf = self._PREPROC_CORPUS_FILE_PATH, index = False, columns = ['text'])
                 y.to_csv(path_or_buf = self._PREPROC_Y_FILE_PATH, index = False)
             
             raw_data = pd.read_csv(self._DATASET_PATH)
             raw_data = raw_data.drop('Unnamed: 0', axis=1)
             raw_data = raw_data.drop('label', axis=1)
             dataset = DatasetPreprocessors._run_general_preprocessor_1(raw_data, 'text')
+            dataset = DatasetPreprocessors.crop_samples_from_left('subject', dataset, 'text')
             y = dataset.iloc[:, 1]
             save_preproc_data()
-            return dataset['text'],y
+            return dataset.loc[:,('text')],y
         super().__init__("emails_enron_99-05" , "_preproc1")
         return self._preprocess(load_saved_preproc_data, run_preprocessing)
 
@@ -146,7 +151,7 @@ class KagleSMS2016DatasetPreprocessors(DatasetPreprocessors):
 
         def run_preprocessing():
             def save_preproc_data():
-                dataset['v2'].to_csv(path_or_buf = self._PREPROC_CORPUS_FILE_PATH, index = False, columns = ['v2'])
+                dataset.loc[:,('v2')].to_csv(path_or_buf = self._PREPROC_CORPUS_FILE_PATH, index = False, columns = ['v2'])
                 y.to_csv(path_or_buf = self._PREPROC_Y_FILE_PATH, index = False)
             
             nltk.download('stopwords')
@@ -156,6 +161,6 @@ class KagleSMS2016DatasetPreprocessors(DatasetPreprocessors):
             dataset = dataset.replace(['ham','spam'],[0, 1])
             y = dataset.iloc[:, 0]
             save_preproc_data()
-            return dataset['v2'],y
+            return dataset.loc[:,('v2')],y
         super().__init__("sms_kagle_2016" , "_preproc1")
         return self._preprocess(load_saved_preproc_data, run_preprocessing)
