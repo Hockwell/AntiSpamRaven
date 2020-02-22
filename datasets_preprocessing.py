@@ -27,6 +27,8 @@ class DatasetPreprocessors(ABC):
         self._PREPROC_CORPUS_FILE_PATH = self._PREPROC_RESULTS_PATH + self._PREPROC_CORPUS_FILE_NAME
         self._PREPROC_Y_FILE_PATH = self._PREPROC_RESULTS_PATH + self._PREPROC_Y_FILE_NAME
 
+    #@staticmethod
+    #def delete_custom_stopwords_from_samples()
     @staticmethod
     def _run_general_preprocessor_1(raw_data, text_column): #работает с датасетами, где есть лишь столбцы label и text
         def mark_useless_samples(): #as np.nan(#)
@@ -88,16 +90,17 @@ class Kagle2017DatasetPreprocessors(DatasetPreprocessors): #эти классы 
 
         def run_preprocessing():
             def save_preproc_data():
-                dataset_corpus.to_csv(path_or_buf = self._PREPROC_CORPUS_FILE_PATH, index = False, columns = ['text'])
+                dataset['text'].to_csv(path_or_buf = self._PREPROC_CORPUS_FILE_PATH, index = False, columns = ['text'])
                 y.to_csv(path_or_buf = self._PREPROC_Y_FILE_PATH, index = False)
 
             raw_data = pd.read_csv(self._DATASET_PATH)
+
             dataset = DatasetPreprocessors._run_general_preprocessor_1(raw_data, 'text')
             y = dataset.iloc[:, 1]
 
             save_preproc_data()
             #получаем корпус слов для каждого семпла - каждый семпл выражен списком необходимых слов (а не всех тех, что содержались в нём)
-            return dataset_corpus,y
+            return dataset['text'],y
         super().__init__("emails_kagle_2017" , "_preproc1")
         return self._preprocess(load_saved_preproc_data, run_preprocessing)
 

@@ -83,7 +83,7 @@ class AlgsBestCombinationSearcher(object):
 
         return  multisort(algs_combis)
 
-    def __export_results(self, algs_combis, results_from): #results - {algs_combi_name, {metrics}}
+    def __export_results(self, algs_combis, results_from, enable_first_combis_with_unique_algs_filter = True): #results - {algs_combi_name, {metrics}}
         def switch_loggers():
             lfp = LogsFileProvider()
             if (results_from == 1):
@@ -92,6 +92,8 @@ class AlgsBestCombinationSearcher(object):
                 return lfp.ml_ODC_sorted_f1, lfp.ml_ODC_sorted_recall
             if (results_from == 3):
                 return lfp.ml_ODC_OCC_sorted_f1, lfp.ml_ODC_OCC_sorted_recall
+            if (results_from == 4):
+                return lfp.ml_single_algs_sorted_f1, None
 
         def export_sorted_by(logger, criterias_list):
             def find_first_combis_with_unique_algs_in_results(entries_amount_of_alg = 1): #entries_amount_of_alg = 1 is combis_with_unique_algs
@@ -121,15 +123,19 @@ class AlgsBestCombinationSearcher(object):
                         combis_with_unique_algs.append(algs_combi)
                 return combis_with_unique_algs
 
+            if (logger == None):
+                return
+
             sorted_algs_combis = AlgsBestCombinationSearcher.__sort_algs_combis_by_q_metrics(algs_combis, 
                                                                                          criterias = criterias_list)
-            sorted_algs_combis_with_unique_algs = find_first_combis_with_unique_algs_in_results()
-            logger.info("//// SORTED_RESULTS_COMBIS_WITH_UNIQUE_ALGS ////")
-            AlgsBestCombinationSearcher.__export_searcher_results(sorted_algs_combis_with_unique_algs, logger)
+            if enable_first_combis_with_unique_algs_filter:
+                sorted_algs_combis_with_unique_algs = find_first_combis_with_unique_algs_in_results()
+                logger.info("//// SORTED_RESULTS_COMBIS_WITH_UNIQUE_ALGS ////")
+                AlgsBestCombinationSearcher.__export_searcher_results(sorted_algs_combis_with_unique_algs, logger)
             logger.info("\n//// ALL RESULTS ////")
             AlgsBestCombinationSearcher.__export_searcher_results(sorted_algs_combis, logger)
 
-        f1_logger, recall_logger = switch_loggers()
+        f1_logger, recall_logger = switch_loggers() #если logger == null, то лог просто не выведется, ошибки не будет
         export_sorted_by(f1_logger, [('f1', True), ('rec', True), ('pred_time', False)])
         export_sorted_by(recall_logger, [('rec', True), ('f1', True), ('pred_time', False)]) #можно включить
 
@@ -159,21 +165,23 @@ class AlgsBestCombinationSearcher(object):
         print('////////////////// test_single_algs_on_folds() done')
         return single_algs_y_pred
 
-    def run(self, X, y, k_folds, algs, enable_OCC = True):
+    def run(self, X, y, k_folds, algs, enable_OCC = False):
         def export_odc_occ_general_results():
             odc_occ_combis = self.__algs_SC + self.__algs_DC + self.__algs_CC
-            self.__export_results(odc_occ_combis, results_from = 3)
+            self.__export_results(odc_occ_combis, 3)
 
         self.__tune(X, y, k_folds, algs, enable_OCC)
         single_algs_y_preds_on_folds = self.__test_single_algs_on_folds()
 
         self.__run_ODC_OCC_searcher(single_algs_y_preds_on_folds, find_OCC = False)
-        self.__export_results(self.__algs_SC + self.__algs_DC, results_from = 2)
+        self.__export_results(self.__algs_SC + self.__algs_DC, 2)
 
         if (enable_OCC):
             self.__run_ODC_OCC_searcher(single_algs_y_preds_on_folds, find_OCC = True)
-            self.__export_results(self.__algs_SC + self.__algs_CC, results_from = 1)
+            self.__export_results(self.__algs_SC + self.__algs_CC, 1)
             export_odc_occ_general_results()
+
+        self.__export_results(self.__algs_SC, 4, False) #вызывать до рассчетов комбинаций нельзя, ибо значения метрик будут не округленными (округление невозмож)
 
     #det - detection, perf - perfomance
     def __tune(self, X, y, k_folds, algs, enable_OCC, combination_length = 4, 

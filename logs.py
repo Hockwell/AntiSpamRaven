@@ -17,8 +17,7 @@ class LogsFileProvider(object): #Singleton
                 pass
 
         def __init_loggers(self): #для добавления логгера просто вписать сюда в виде поля
-            #нужен, например, для записи информации по мере её поступления, чтобы в случае сбоя программы сохранились инфа для поиска ошибки
-            #в процессах ML
+            #названия логгеров должны отличаться (параметр)
             self.ml_research_general = self.__init_log('logger', logfile_name="ml_research_general.log")
             self.ml_ODC_sorted_f1 = self.__init_log('logger2', logfile_name="ml_ODC_sorted_f1.log")
             self.ml_ODC_sorted_recall = self.__init_log('logger3', logfile_name="ml_ODC_sorted_recall.log")
@@ -26,6 +25,7 @@ class LogsFileProvider(object): #Singleton
             self.ml_OCC_sorted_recall = self.__init_log('logger31', logfile_name="ml_OCC_sorted_recall.log")
             self.ml_ODC_OCC_sorted_f1 = self.__init_log('logger40', logfile_name="ml_ODC_OCC_sorted_f1.log")
             self.ml_ODC_OCC_sorted_recall = self.__init_log('logger41', logfile_name="ml_ODC_OCC_sorted_recall.log")
+            self.ml_single_algs_sorted_f1 = self.__init_log('logger5', logfile_name="ml_single_algs_sorted_f1.log")
 
         def __init_log(self,logger_name, logfile_name):
             self.delete_old_log(logfile_name)
