@@ -22,9 +22,9 @@ def run_single_algs_test():
     print('//////////////////////////// single alg test done')
 
 def run_tests_for_search_of_best_algs_combi():
-    def run_searcher_on_dataset(X,y, k_folds):
+    def run_searcher_on_dataset(X,y, k_folds, max_combination_length = 4):
         algs_searcher = AlgsBestCombinationSearcher()
-        algs_searcher.run(X, y, k_folds, algs)
+        algs_searcher.run(X, y, k_folds, algs, max_combination_length)
         print('//////////////////////////// algs search done')
     
     def print_dataset_properties():
@@ -50,7 +50,7 @@ def run_tests_for_search_of_best_algs_combi():
             Path(dir_B_path).mkdir(parents=True, exist_ok=True)
             shutil.copyfile(dir_A_path + file_name, dir_B_path + file_name)
 
-    for test_name, ( (corpus,y), (extractor_func, extractor_params) ) in test_scenarios.items():
+    for test_name, ( (corpus,y), (extractor_func, extractor_params), research_params ) in test_scenarios.items():
         print('/////////////////////////////////////' + test_name)
         print('//////////////////////////// preprocessing done')
         X = extractor_func(corpus, **extractor_params) #corpus -> X
@@ -58,7 +58,7 @@ def run_tests_for_search_of_best_algs_combi():
         print_dataset_properties()
         X_train, y_train, X_test, y_test = DatasetInstruments.make_shuffle_stratified_split_on_folds(X,y, test_size = 0.25, n_splits=1)[0]
         #visualize_dataset()
-        run_searcher_on_dataset(X, y, k_folds=10)
+        run_searcher_on_dataset(X, y, **research_params, k_folds=10)
         replace_results_to_specific_dir() #они уже экспортированы, но лежат в общем каталоге по умолчанию, их нужно перенести
 
 set_libs_settings()
@@ -66,7 +66,7 @@ set_libs_settings()
 #Работа с любым датасетом - это прохождение необходимых этапов: 1) предобработка, 2) извлечение признаков, 3) тестирование с комбинациями,
 #поэтому и созданы "тестовые сценарии", любой сценарий здесь можно задать или легко модифицировать старые. 
 #Сценарии можно отключать простым комментированием. Эти сценарии можно сделать совместимыми с любым исследовательским кодом.
-#{ scenarios_name: ( (corpus,y), (extractor,{params}) ) }
+#{ scenarios_name: ( (corpus,y), (extractor,{params}), {research_params} ) }
 #препроцессинг вынесен в отдельный список по разным причинам, в том числе из-за необходимости делать тестовые сценарии с комбинациями датасетов
 kagle2017_preproc1 = Kagle2017DatasetPreprocessors().preprocessor_1()
 enron_preproc1 = EnronDatasetPreprocessors().preprocessor_1()
@@ -74,20 +74,24 @@ kagle2016_preproc1 = KagleSMS2016DatasetPreprocessors().preprocessor_1()
 
 #название сценария будет использовано для названия каталога логов
 test_scenarios = {
-    'K2017_Email pr1 Tfidf1(ngram=(1,2))': 
-    ( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}) ),
-    'E_Email pr1 Tfidf1(ngram=(1,2))': 
-    ( enron_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}) ),
-    'K2016_SMS pr1 Tfidf1(ngram=(1,2))': 
-    ( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}) ),
+    #'K2017_Email pr1 Tfidf1(ngram=(1,1))': 
+    #( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ),
+    #'K2017_Email pr1 Tfidf1(ngram=(1,2))': 
+    #( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ),
+    #'E_Email pr1 Tfidf1(ngram=(1,2))': 
+    #( enron_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ),
+    'K2016_SMS pr1 Tfidf1(ngram=(1,1))': 
+    ( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {'max_combination_length': 5} ),
+    #'K2016_SMS pr1 Tfidf1(ngram=(1,3))': 
+    #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,3)}), {} ),
     }
 
 algs = {
         'ComplementNB_Default': ComplementNBAlg_Default(),
         'SGDClf_Default': SGDAlg_Default(),
-        #'SGDAlg_AdaptiveIters': SGDAlg_AdaptiveIters(),
-        #'SGDAlg_LogLoss': SGDAlg_LogLoss(),
-        #'ASGDAlg_Default': ASGDAlg_Default(),
+        'SGDAlg_AdaptiveIters': SGDAlg_AdaptiveIters(),
+        'SGDAlg_LogLoss': SGDAlg_LogLoss(),
+        'ASGDAlg_Default': ASGDAlg_Default(),
         #'NearestCentroid_Default': NearestCentroidAlg_Default(),
         #'LinearSVC_Default': LinearSVCAlg_Default(),
         #'LinearSVCAlg_Balanced': LinearSVCAlg_Balanced(),
