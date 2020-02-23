@@ -10,13 +10,18 @@ from nltk.stem.porter import PorterStemmer
 import os
 from abc import ABC, abstractmethod
 
+from generic import *
+
+#!Чтобы задействовать новый препроцессор взамен старого для конкретного препроцессора и его датасета, необходимо удалить сохранённые данные препроцессинга вручную
+#по пути _PREPROC_RESULTS_PATH. Программа сохраняет последний результат препроцессинга для каждого препроцессора датасета в отдельности.
+
 #можно использовать родительский класс, а можно писать полностью свой препроцессор, в том числе без сохранения данных препроцессинга
 class DatasetPreprocessors(ABC):
     def __init__(self, dataset_name, preproc_files_suffix):
         pass
     def __init__(self, dataset_name, preproc_files_suffix):
-        self._PREPROC_RESULTS_PATH = r"C:\Users\volnu\OneDrive\Data\Dev\Src\Med\AntiSpamRaven\preproc_results\\"
-        self._DATASETS_PATH = r"C:\Users\volnu\OneDrive\Data\Dev\Src\Med\AntiSpamRaven\datasets\\"
+        self._PREPROC_RESULTS_PATH = ServiceData.PROGRAM_DIR + r"\preproc_results\\"
+        self._DATASETS_PATH = ServiceData.PROGRAM_DIR + r"\datasets\\"
         self._DATA_FILE_EXTENSION = ".csv"
         self._DATASET_NAME = dataset_name
         self._DATASET_FILE_NAME = self._DATASET_NAME + self._DATA_FILE_EXTENSION
@@ -33,11 +38,13 @@ class DatasetPreprocessors(ABC):
         return dataset
 
     @staticmethod
-    def _run_general_preprocessor_1(raw_data, col_with_text): #работает с датасетами, где есть лишь столбцы label и text
-        def mark_useless_samples(): #as np.nan(#)
-            dataset.loc[:,(col_with_text)].replace('', np.nan, inplace=True)
-            mask = dataset[col_with_text].str.len() > 2
-            return dataset[mask]
+    def _run_general_preprocessor_1(raw_data, col_with_text, min_sample_length = 2): #работает с датасетами, где есть лишь столбцы label и text
+        def detect_useless_samples(dataset): #as np.nan(#)
+            dataset.loc[:,(col_with_text)].replace("", np.nan, inplace=True)
+            mask = dataset[col_with_text].str.len() >= min_sample_length
+            dataset = dataset[mask].dropna(axis=0)
+            return dataset
+
         nltk.download('stopwords')
         dataset = raw_data.drop_duplicates()
         #Replace email addresses with 'emailaddr'
@@ -64,8 +71,7 @@ class DatasetPreprocessors(ABC):
             #со словами вместо списка слов: .join(map(lambda_a,list from lambda_b(sample_words)))
         dataset.loc[:,(col_with_text)] = dataset.loc[:,(col_with_text)].apply(lambda sample_words:' '.join( list(map(lambda word: ps.stem(word), 
                         list(filter(lambda text: text not in set(stopwords.words('english')), sample_words)))) ))
-        dataset = mark_useless_samples()
-        dataset = dataset.dropna(axis=0)
+        dataset = detect_useless_samples(dataset)
         return dataset
 
     def _preprocess(self, load_saved_preproc_data_func, run_preprocessing_func): #осуществляет управлением сохранением результатов препроцессинга
@@ -98,7 +104,7 @@ class Kagle2017DatasetPreprocessors(DatasetPreprocessors): #эти классы 
 
             raw_data = pd.read_csv(self._DATASET_PATH)
 
-            dataset = DatasetPreprocessors._run_general_preprocessor_1(raw_data, 'text')
+            dataset = DatasetPreprocessors._run_general_preprocessor_1(raw_data, 'text', 10)
             dataset = DatasetPreprocessors.crop_samples_from_left('subject', dataset, 'text')
             y = dataset.iloc[:, 1]
 
@@ -119,11 +125,6 @@ class EnronDatasetPreprocessors(DatasetPreprocessors):
             return dataset_corpus,y
 
         def run_preprocessing():
-            def mark_useless_samples(): #as np.nan
-                #dataset['text'].replace('', np.nan, inplace=True)
-                mask = dataset.loc[:,('text')].str.len() > 3
-                return dataset[mask]
-
             def save_preproc_data():
                 dataset.loc[:,('text')].to_csv(path_or_buf = self._PREPROC_CORPUS_FILE_PATH, index = False, columns = ['text'])
                 y.to_csv(path_or_buf = self._PREPROC_Y_FILE_PATH, index = False)
@@ -131,7 +132,7 @@ class EnronDatasetPreprocessors(DatasetPreprocessors):
             raw_data = pd.read_csv(self._DATASET_PATH)
             raw_data = raw_data.drop('Unnamed: 0', axis=1)
             raw_data = raw_data.drop('label', axis=1)
-            dataset = DatasetPreprocessors._run_general_preprocessor_1(raw_data, 'text')
+            dataset = DatasetPreprocessors._run_general_preprocessor_1(raw_data, 'text', 10)
             dataset = DatasetPreprocessors.crop_samples_from_left('subject', dataset, 'text')
             y = dataset.iloc[:, 1]
             save_preproc_data()

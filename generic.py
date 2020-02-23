@@ -7,6 +7,11 @@ from operator import attrgetter
 from itertools import chain, combinations
 from abc import ABC
 
+import os
+
+class ServiceData(ABC):
+    PROGRAM_DIR = os.path.dirname(os.path.realpath(__file__))
+
 class DatasetInstruments(ABC):
     @staticmethod
     def convert_dataset_from_pandas_to_numpy(X,y):

@@ -39,6 +39,10 @@ class SGDAlg_Default(MLAlgorithm):
     def __init__(self):
         self._clf = SGDClassifier() #LinearSVC с градиентным спуском
 
+class SGDAlg_LogLoss(MLAlgorithm):
+    def __init__(self):
+        self._clf = SGDClassifier(loss='log')
+
 class SGDAlg_AdaptiveIters(MLAlgorithm):
     def __init__(self):
         pass
@@ -102,23 +106,3 @@ class RandomForestAlg_Default(MLAlgorithm):
 class PerceptronAlg_Default(MLAlgorithm): # is equivalent to SGDClassifier(loss="perceptron", eta0=1, learning_rate="constant", penalty=None).
     def __init__(self):
         self._clf = Perceptron()
-
-#class DecisionTreeAlg_Default(MLAlgorithm):
-#    def __init__(self):
-#        self._clf = Perceptron()
-
-#class LogisticRegrAlg_Default(MLAlgorithm):
-#    def __init__(self):
-#        self._clf = Perceptron()
-
-#class AdaBoostAlg_Default(MLAlgorithm):
-#    def __init__(self):
-#        self._clf = Perceptron()
-
-#class XGBoostAlg_Default(MLAlgorithm):
-#    def __init__(self):
-#        self._clf = Perceptron()
-
-#class LightGBMAlg_Default(MLAlgorithm):
-#    def __init__(self):
-#        self._clf = Perceptron()
