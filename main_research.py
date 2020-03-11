@@ -41,7 +41,7 @@ def run_tests_for_search_of_best_algs_combi():
         visualize_dataset(y_train)
         visualize_dataset(y_test)
 
-    def replace_results_to_specific_dir():
+    def move_results_to_specific_dir():
         dir_A_path = LogsFileProvider.LOGS_DIR
         dir_B_name = test_name
         dir_B_path = str(Path(dir_A_path).parent / dir_B_name) + "\\"
@@ -59,7 +59,7 @@ def run_tests_for_search_of_best_algs_combi():
         X_train, y_train, X_test, y_test = DatasetInstruments.make_shuffle_stratified_split_on_folds(X,y, test_size = 0.25, n_splits=1)[0]
         #visualize_dataset()
         run_searcher_on_dataset(X, y, **research_params, k_folds=10)
-        replace_results_to_specific_dir() #они уже экспортированы, но лежат в общем каталоге по умолчанию, их нужно перенести
+        move_results_to_specific_dir() #они уже экспортированы, но лежат в общем каталоге по умолчанию, их нужно перенести
 
 set_libs_settings()
 
@@ -92,8 +92,8 @@ algs = {
         'SGDAlg_AdaptiveIters': SGDAlg_AdaptiveIters(),
         'SGDAlg_LogLoss': SGDAlg_LogLoss(),
         'ASGDAlg_Default': ASGDAlg_Default(),
-        #'NearestCentroid_Default': NearestCentroidAlg_Default(),
-        #'LinearSVC_Default': LinearSVCAlg_Default(),
+        'NearestCentroid_Default': NearestCentroidAlg_Default(),
+        'LinearSVC_Default': LinearSVCAlg_Default(),
         #'LinearSVCAlg_Balanced': LinearSVCAlg_Balanced(),
         #'SVCAlg_RBF_Default': SVCAlg_RBF_Default(),
         #'SVCAlg_RBF_Aggr': SVCAlg_RBF_Aggr(),

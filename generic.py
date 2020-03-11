@@ -98,9 +98,22 @@ class CollectionsInstruments(ABC):
         return {**dict1, **dict2}
 
     @staticmethod
-    def round_dict_vals(dict_, decimal_places):
+    def round_all_dict_vals(dict_, decimal_places):
         return dict(zip(dict_.keys(), list(np.around(list(dict_.values()), decimal_places))))
 
+    @staticmethod
+    def round_dict_vals(dict_, decimal_places, keys): #in-place
+        for key in keys:
+            dict_[key] = round(dict_[key], decimal_places)
+
+    @staticmethod
+    def create_dict_by_keys_and_vals(keys, values):
+        return dict(zip(keys, values))
+
+    @staticmethod
+    def delete_dict_elements_by_removal_list(dict_, keys_removal_list): #in-place
+        for key in keys_removal_list:
+            del dict_[key]
 class MathInstruments(ABC):
     @staticmethod
     def make_subsets(iterable,k):

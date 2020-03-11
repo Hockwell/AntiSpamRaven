@@ -8,6 +8,8 @@ class LogsFileProvider(object): #Singleton
     instance = None #static
     LOGS_DIR = ServiceData.PROGRAM_DIR + r"/logs/.last/"
 
+    LOG_CONTENT_UNKN_HEADER = '//// UNKNOWN HEADER ////'
+
     class __LogsFileProvider:
         FORMATTER = logging.Formatter("%(message)s")
         def __init__(self):
@@ -49,4 +51,9 @@ class LogsFileProvider(object): #Singleton
             cls.instance = LogsFileProvider.__LogsFileProvider()
         return cls.instance
 
-    
+    @staticmethod
+    def log_named_info_block(logger, filtered_info_str, filter_params={}, log_header=LOG_CONTENT_UNKN_HEADER): 
+        #param-ы фильтра в упакованном виде именно для вывода в лог
+        logger.info(log_header) #print HEADER
+        logger.info('filter_params: ' + str(filter_params)) #print params
+        logger.info(filtered_info_str) #print info
