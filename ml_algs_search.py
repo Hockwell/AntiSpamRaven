@@ -101,20 +101,20 @@ class AlgsBestCombinationSearcher(object):
     def __export_results(self, algs_combis_dict, results_from, enable_combis_with_bad_metrics_vals_remover,
             enable_useless_combis_remover,enable_excessively_long_combis_remover,
             enable_best_combis_with_unique_algs_filter = True): 
-        #фильтры - формируют подмножество данных, ремуверы - удаляют определённые результаты.
+        
         #enable_best_combis_with_unique_algs_filter = True, если сортировка только по убыванию качества
 
         #results - {algs_combi_name, {metrics}}
         def switch_loggers():
             lfp = LogsFileProvider()
             if (results_from == 1):
-                return lfp.ml_OCC_sorted_f1, lfp.ml_OCC_sorted_recall
+                return lfp.loggers['ml_OCC_sorted_f1'], lfp.loggers['ml_OCC_sorted_recall']
             if (results_from == 2):
-                return lfp.ml_ODC_sorted_f1, lfp.ml_ODC_sorted_recall
+                return lfp.loggers['ml_ODC_sorted_f1'], lfp.loggers['ml_ODC_sorted_recall']
             if (results_from == 3):
-                return lfp.ml_ODC_OCC_sorted_f1, lfp.ml_ODC_OCC_sorted_recall
+                return lfp.loggers['ml_ODC_OCC_sorted_f1'], lfp.loggers['ml_ODC_OCC_sorted_recall']
             if (results_from == 4):
-                return lfp.ml_single_algs_sorted_f1, None
+                return lfp.loggers['ml_single_algs_sorted_f1'], None
 
         def export_sorted_by(logger, criterias_list):
             def log_filtered_results(filter_func, filter_params={}, log_header=LogsFileProvider.LOG_CONTENT_UNKN_HEADER):
@@ -133,13 +133,9 @@ class AlgsBestCombinationSearcher(object):
                     #фиксируем алгоритм, запоминаем индекс в sorted_results.
                     #по индексам формируем список фильтрованных результатов, по факту они находятся в полном списке - лишняя память не расходуется
                 #Данный фильтр хорош тогда, когда комбинации отсортированы по убыванию своего качества, на выходе мы получим
-                #уникальные комбинации, при этом каждый алгоритм присутствует в комбинации лучшего качества среди остальных
-                #комбинаций со своим участием.
+                #уникальные комбинации с лучшим качеством (по той метрике, по которой отсортирован лог).
                 #Т.е. мы видим лучшие комбинации при уникальном составе алгоритмов, можем оценить влияние на более качественные комбинации (выше)
-                #добавленых др. алгоритмов. Однако, фильтр не позволяет посмотреть др. комбинации, где будут использоваться уже
-               #встречавшиеся алгоритмы (их метрика может быть даже не ниже, просто фильтр недопустил их до вывода из-за неуникальности состава
-               #алгоритмов), 
-               #в том числе те, что похуже качеством, но не менее интересны, ведь могут быть сильнее др. особенностями
+                #добавленых др. алгоритмов.
                     def mark_algs_entries_in_combi():
                         for alg_name in combi_obj.algs_names:
                             algs_entries_in_combis[alg_name] += 1
@@ -233,6 +229,7 @@ class AlgsBestCombinationSearcher(object):
             #основных метрик (recall, precision, pred_time*) все алгоритмы-участники по одиночке
             #*по факту не проверяется, поскольку комбинация всегда работает медленнее её участников по-одиночке,
             #поэтому если комбинация не лучше в prec или rec, то она считается бесполезной
+            #если требуется уточнение "на сколько лучше", то менять необходимо кол-во знаков после запятой
             def is_combi_useless(combi, comparing_metrics=['rec','prec']):
                 def is_combi_metrics_not_better(algs_combi_metrics, single_algs_metrics): 
                     #векторизированное сравнение, кол-во метрик может быть любым
@@ -280,7 +277,9 @@ class AlgsBestCombinationSearcher(object):
                         if combi_name in combis_dict_filtered:
                             keys_removal_list.append(combi_name)
                             delete_child_combis(combi_name)
-                    
+                #Раскомментировать для логирования
+                #LogsFileProvider().loggers['ml_research_calculations'].info("/////--------------- delete_excessively_long_combinations()")
+
                 #зафиксировать все доступные алгоритмы (их имена) 
                 all_algs_names = set([alg_name for alg_name in self.__algs_SC])
                 for combi_name in combis_dict_full:
@@ -302,8 +301,10 @@ class AlgsBestCombinationSearcher(object):
                         keys_removal_list.append(combi_name)
                         delete_child_combis(combi_name) #дочерние комбинации избыточны, если родитель избыточен
                         CollectionsInstruments.delete_dict_elements_by_removal_list(combis_dict_filtered, keys_removal_list)
+                        #Раскомментировать для логирования
+                        #LogsFileProvider().loggers['ml_research_calculations'].info(str(keys_removal_list))
 
-            def is_combi_has_bad_metrics_vals(combi, not_bad_metr_vals_range={'prec':[0.85,1.0], 'rec':[0.8,1.0]}):
+            def is_combi_has_bad_metrics_vals(combi, not_bad_metr_vals_range={'prec':[0.9,1.0], 'rec':[0.85,1.0]}):
                 #фильтрация по диапазонам метрик качества обнаружения
                 #можно фильтровать по разным метрикам, не только указанным
                 def is_combi_has_bad_metric_val(metric_name, vals_range):
@@ -319,7 +320,7 @@ class AlgsBestCombinationSearcher(object):
             #будет или нет внешний код сам понимать когда нужно выключать какие-либо фильтры во избежание проблем с совместимостью
             def delete_combis_by_condition(condition_func, single_combis_compatibility, params):
                 #Раскомментировать для логирования
-                LogsFileProvider().ml_research_general.info("///// "+str(condition_func))
+                #LogsFileProvider().loggers['ml_research_calculations'].info("///// "+str(condition_func))
 
                 keys_removal_list=[]
                 for combi_name in combis_dict_filtered:
@@ -328,7 +329,7 @@ class AlgsBestCombinationSearcher(object):
                             continue
                     if condition_func(combis_dict_filtered[combi_name], **params):
                         #Раскомментировать для логирования
-                        LogsFileProvider().ml_research_general.info(combi_name)
+                        #LogsFileProvider().loggers['ml_research_calculations'].info(combi_name)
                         keys_removal_list.append(combi_name)
                 CollectionsInstruments.delete_dict_elements_by_removal_list(combis_dict_filtered, keys_removal_list)
 
@@ -362,6 +363,7 @@ class AlgsBestCombinationSearcher(object):
             roundOff_metrics_of_combis(algs_DC)
             roundOff_metrics_of_combis(algs_CC)
 
+            #фильтры - формируют подмножество данных, ремуверы - удаляют определённые результаты. Использование обоих инструментов называется фильтрацией.
             remove_bad_combis(algs_SC, self.__algs_SC, **enabled_removers)
             remove_bad_combis(algs_DC, self.__algs_DC, **enabled_removers) 
             self.__export_results({**algs_SC,**algs_DC}, 2, **enabled_removers)
@@ -426,19 +428,19 @@ class AlgsBestCombinationSearcher(object):
 
         def calc_mean_metrics_vals_for_combi():
             #Раскомментировать для логирования
-            #LogsFileProvider().ml_research_general.info('--------- Проверка правильности подсчёта метрик ---------')
+            #LogsFileProvider().loggers['ml_research_calculations'].info('--------- Проверка правильности подсчёта метрик ---------')
             n = len(combi_det_q_metrics_on_folds)
             mean_det_q_metrics_for_combi = CollectionsInstruments.create_dict_by_keys_and_vals(self.__DETECTION_METRICS,[0, 0, 0, 0, 0])
             for metrics in combi_det_q_metrics_on_folds:
                 #Раскомментировать для логирования
-                #LogsFileProvider().ml_research_general.info(metrics)
+                #LogsFileProvider().loggers['ml_research_calculations'].info(metrics)
                 metrics_on_fold = metrics.values()
                 mean_det_q_metrics_for_combi = { metric_name:metric_val+new_metric_val/n for (metric_name, metric_val),new_metric_val in 
                                                 zip(mean_det_q_metrics_for_combi.items(), metrics_on_fold) } 
                 #среднее значение каждой метрики
             
             #Раскомментировать для логирования
-            #LogsFileProvider().ml_research_general.info('--- Итоговая метрика' + str(mean_det_q_metrics_for_combi))
+            #LogsFileProvider().loggers['ml_research_calculations'].info('--- Итоговая метрика' + str(mean_det_q_metrics_for_combi))
             return mean_det_q_metrics_for_combi
 
         mean_det_q_metrics_for_combis = []
@@ -488,7 +490,7 @@ class AlgsBestCombinationSearcher(object):
             #для обнаружения спама необходимо, чтобы хотя бы 1 алгоритм признал семпл спамом
             #фиксиоуем тренировочные фолды и валидационный и каждый алгоритм комбинации проверяем на них 
                 #Раскомментировать для логирования
-                #LogsFileProvider().ml_research_general.info('---------' + str(self.get_algs_combination_name(combi)))
+                #LogsFileProvider().loggers['ml_research_calculations'].info('---------' + str(self.get_algs_combination_name(combi)))
                 combi_obj = algs_combinations[combi_name]
                 y_pred_combis_on_folds[combi_name] = []
                 for (i,(_, _, _, y_validFold)) in enumerate(self.__folds):
@@ -497,12 +499,12 @@ class AlgsBestCombinationSearcher(object):
                     for alg_name in combi_obj.algs_names:
                         #Раскомментировать для логирования
                         #classes, classes_counts = np.unique(y_pred_combination, return_counts = True)
-                        #LogsFileProvider().ml_research_general.info('y_pred_combination before' + str(dict(zip(classes.tolist(), classes_counts))))
+                        #LogsFileProvider().loggers['ml_research_calculations'].info('y_pred_combination before' + str(dict(zip(classes.tolist(), classes_counts))))
                         y_pred_alg = single_algs_y_preds[alg_name][i]
                         y_pred_combination = combis_aggregation_func(y_pred_combination, y_pred_alg)
                         #Раскомментировать для логирования
                         #classes, classes_counts = np.unique(y_pred_combination, return_counts = True)
-                        #LogsFileProvider().ml_research_general.info('y_pred_combination after' + str(dict(zip(classes.tolist(), classes_counts))))
+                        #LogsFileProvider().loggers['ml_research_calculations'].info('y_pred_combination after' + str(dict(zip(classes.tolist(), classes_counts))))
                     y_pred_combis_on_folds[combi_name].append(y_pred_combination)
             return y_pred_combis_on_folds
 

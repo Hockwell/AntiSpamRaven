@@ -8,6 +8,7 @@ from pathlib import Path
 
 from datasets_preprocessing import *
 from algs import *
+from logs import *
 from feature_extraction import *
 from ml_algs_search import *
 from generic import *
@@ -60,6 +61,8 @@ def run_tests_for_search_of_best_algs_combi():
         #visualize_dataset()
         run_searcher_on_dataset(X, y, **research_params, k_folds=10)
         move_results_to_specific_dir() #они уже экспортированы, но лежат в общем каталоге по умолчанию, их нужно перенести
+        LogsFileProvider.delete_log_files_on_hot()
+    LogsFileProvider.shutdown()
 
 set_libs_settings()
 
@@ -74,16 +77,22 @@ kagle2016_preproc1 = KagleSMS2016DatasetPreprocessors().preprocessor_1()
 
 #название сценария будет использовано для названия каталога логов
 test_scenarios = {
-    #'K2017_Email pr1 Tfidf1(ngram=(1,1))': 
-    #( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ),
+    'K2017_Email pr1 Tfidf1(ngram=(1,1))': 
+    ( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ),
     #'K2017_Email pr1 Tfidf1(ngram=(1,2))': 
-    #( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ),
+    #( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ),
+    'E_Email pr1 Tfidf1(ngram=(1,1))': 
+    ( enron_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ),
     #'E_Email pr1 Tfidf1(ngram=(1,2))': 
     #( enron_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ),
     'K2016_SMS pr1 Tfidf1(ngram=(1,1))': 
-    ( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {'max_combination_length': 5} ),
+    ( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ),
+    #'K2016_SMS pr1 Tfidf1(ngram=(1,2))': 
+    #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ),
     #'K2016_SMS pr1 Tfidf1(ngram=(1,3))': 
     #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,3)}), {} ),
+    #'K2016_SMS pr1 Tfidf1(ngram=(2,2))': 
+    #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(2,2)}), {} ),
     }
 
 algs = {
@@ -92,8 +101,8 @@ algs = {
         'SGDAlg_AdaptiveIters': SGDAlg_AdaptiveIters(),
         'SGDAlg_LogLoss': SGDAlg_LogLoss(),
         'ASGDAlg_Default': ASGDAlg_Default(),
-        'NearestCentroid_Default': NearestCentroidAlg_Default(),
-        'LinearSVC_Default': LinearSVCAlg_Default(),
+        #'NearestCentroid_Default': NearestCentroidAlg_Default(),
+        #'LinearSVC_Default': LinearSVCAlg_Default(),
         #'LinearSVCAlg_Balanced': LinearSVCAlg_Balanced(),
         #'SVCAlg_RBF_Default': SVCAlg_RBF_Default(),
         #'SVCAlg_RBF_Aggr': SVCAlg_RBF_Aggr(),
