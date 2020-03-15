@@ -63,6 +63,10 @@ class LinearSVCAlg_Balanced(MLAlgorithm):
     def __init__(self):
         self._clf = svm.LinearSVC(class_weight='balanced', loss='squared_hinge')
 
+class LinearSVCAlg_Extra(MLAlgorithm): 
+    def __init__(self):
+        self._clf = svm.LinearSVC(loss='squared_hinge', tol=0.1, max_iter=4000)
+
 class SVCAlg_RBF_Default(MLAlgorithm):
     def __init__(self):
         self._clf = svm.SVC(kernel='rbf', gamma='scale')
@@ -71,11 +75,19 @@ class SVCAlg_RBF_Aggr(MLAlgorithm):
     def __init__(self):
         self._clf = svm.SVC(kernel='rbf', gamma='scale', C=0.01)
     
-class PassiveAggressiveAlg_Default(MLAlgorithm):
+class PAA_I_Default(MLAlgorithm):
     def __init__(self):
-        self._clf = PassiveAggressiveClassifier()
-    
-class RidgeAlg_Default(MLAlgorithm):
+        self._clf = PassiveAggressiveClassifier(loss = 'hinge')
+
+class PAA_II_Default(MLAlgorithm):
+    def __init__(self):
+        self._clf = PassiveAggressiveClassifier(loss = 'squared_hinge')
+
+class PAA_II_Balanced(MLAlgorithm):
+    def __init__(self):
+        self._clf = PassiveAggressiveClassifier(loss = 'squared_hinge', class_weight='balanced')
+
+class RidgeAlg_Default(MLAlgorithm): #Least-squares support-vector machine
     def __init__(self):
         self._clf = RidgeClassifier()
     
@@ -83,19 +95,15 @@ class KNeighborsAlg_Default(MLAlgorithm):
     def __init__(self):
         self._clf = KNeighborsClassifier()
 
-class RandomForestAlg_Mod1(MLAlgorithm):
+class RandomForestAlg_Small(MLAlgorithm):
     def __init__(self):
-        self._clf = RandomForestClassifier(n_estimators=200, max_depth=3)
+        self._clf = RandomForestClassifier(n_estimators=10)
 
-class RandomForestAlg_Mod2(MLAlgorithm):
+class RandomForestAlg_Medium(MLAlgorithm):
     def __init__(self):
-        self._clf = RandomForestClassifier(n_estimators=20)
+        self._clf = RandomForestClassifier(n_estimators=50)
 
-class RandomForestAlg_Mod3(MLAlgorithm):
-    def __init__(self):
-        self._clf = RandomForestClassifier(n_estimators=20, max_depth=3)
-
-class RandomForestAlg_Mod4(MLAlgorithm):
+class RandomForestAlg_Big(MLAlgorithm):
     def __init__(self):
         self._clf = RandomForestClassifier(n_estimators=500)
 
