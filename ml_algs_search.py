@@ -36,6 +36,7 @@ from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_sc
 from enum import Enum
 import time
 import copy
+from abc import ABC
 
 from logs import *
 from generic import *
@@ -46,12 +47,19 @@ class AlgsBestCombinationSearcher(object):
         DISJUNCTIVE = 1
         CONJUNCTIVE = 2
 
-    class AlgsCombination(object):
-        def __init__(self, combi_type, algs_names, algs_objs):
+    class AlgsCombination(ABC):
+        def __init__(self, combi_type):
             self.type = combi_type
+            self.quality_metrics = None #{}
+
+    class ComplexCombination(AlgsCombination): #стекинг
+        pass
+
+    class TrivialCombination(AlgsCombination):
+        def __init__(self, combi_type, algs_names, algs_objs):
+            AlgsBestCombinationSearcher.AlgsCombination.__init__(self, combi_type)
             self.algs_names = algs_names #[]
             self.algs_objs = algs_objs #[]
-            self.quality_metrics = None #{}
             self.length = len(algs_names)
 
         @staticmethod
@@ -67,8 +75,6 @@ class AlgsBestCombinationSearcher(object):
 
         def create_name(self):
             return self.create_combi_name(self.type, self.algs_names)
-
-        
 
     __DETECTION_METRICS = ['f1', 'auc', 'acc', 'prec', 'rec'] #единые для всех комбинаций метрики, вынесены в отдельное место
     #для упрощения добавлений/удалений метрик из вычислений, унификации и наглядности
@@ -269,7 +275,7 @@ class AlgsBestCombinationSearcher(object):
                     #определяем доступные алгоритмы для генерации имён удаляемых комбинаций
                     available_algs_names = all_algs_names - set(parent_combi_obj.algs_names)
                     #составляем имена
-                    combis_names_generated = [self.AlgsCombination.create_combi_name(parent_combi_obj.type, parent_combi_obj.algs_names + [name]) 
+                    combis_names_generated = [self.TrivialCombination.create_combi_name(parent_combi_obj.type, parent_combi_obj.algs_names + [name]) 
                                                 for name in available_algs_names]
                     #проверяем наличие таких комбинаций. если найдены, добавляем в список на удаление
                     #делаем имена новыми родителями и вызываем данную функцию снова
@@ -289,7 +295,7 @@ class AlgsBestCombinationSearcher(object):
                     combi_obj = combis_dict_filtered[combi_name]
                     if combi_obj.type == self.CombinationsTypes.SINGLE:
                         continue
-                    combi_predecessor_name = self.AlgsCombination.create_combi_name(combi_obj.type, combi_obj.algs_names[:-1])
+                    combi_predecessor_name = self.TrivialCombination.create_combi_name(combi_obj.type, combi_obj.algs_names[:-1])
                     if not combi_predecessor_name in combis_dict_filtered:
                         continue
                     combi_predecessor = combis_dict_filtered[combi_predecessor_name] if len(combi_obj.algs_names[:-1]) > 1 else self.__algs_SC[combi_predecessor_name]
@@ -399,7 +405,7 @@ class AlgsBestCombinationSearcher(object):
                     if (len(subset) >= min_length and len(subset) <= max_length):
                         algs_names, algs_objs = zip(*subset)
                         algs_names, algs_objs = list(algs_names), list(algs_objs)
-                        algs_combi = self.AlgsCombination(combis_type, algs_names, algs_objs)
+                        algs_combi = self.TrivialCombination(combis_type, algs_names, algs_objs)
                         combis_dict[algs_combi.create_name()] = algs_combi
                             
             algs_subsets = MathInstruments.make_subsets(algs_list, self.__max_combination_length+1)  #для остального кода важно, чтобы subset-ы

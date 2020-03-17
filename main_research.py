@@ -78,7 +78,7 @@ kagle2016_preproc1 = KagleSMS2016DatasetPreprocessors().preprocessor_1()
 #название сценария будет использовано для названия каталога логов
 test_scenarios = {
     'K2017_Email pr1 Tfidf1(ngram=(1,1))': 
-    ( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ),
+    ( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ), #( (corpus,y), (extractor_func, extractor_params), research_params )
     #'K2017_Email pr1 Tfidf1(ngram=(1,2))': 
     #( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ),
     'E_Email pr1 Tfidf1(ngram=(1,1))': 
@@ -101,39 +101,23 @@ algs = {
         'SGDAlg_AdaptiveIters': SGDAlg_AdaptiveIters(),
         'SGDAlg_LogLoss': SGDAlg_LogLoss(),
         'ASGDAlg_Default': ASGDAlg_Default(),
-        #'NearestCentroid_Default': NearestCentroidAlg_Default(),
-        #'LinearSVC_Default': LinearSVCAlg_Default(),
-        #'LinearSVC_Balanced': LinearSVCAlg_Balanced(),
-        #'LinearSVCAlg_Extra': LinearSVCAlg_Extra(),
-        #'SVCAlg_RBF_Default': SVCAlg_RBF_Default(),
-        #'SVCAlg_RBF_Aggr': SVCAlg_RBF_Aggr(),
-        #'PPA_I_Default': PPA_I_Default(),
-        #'PPA_II_Default': PPA_II_Default(),
-        #'PPA_II_Balanced': PPA_II_Balanced(),
-        #'KNeighborsClf_Default': KNeighborsAlg_Default(),
-        #'RandomForest_Default': RandomForestAlg_Default(),
-        #'RandomForest_Mod1': RandomForestAlg_Mod1(),
-        #'RandomForest_Mod2': RandomForestAlg_Mod2(),
-        #'RandomForest_Mod3': RandomForestAlg_Mod3(),
-        #'RandomForest_Mod4': RandomForestAlg_Mod4(),
-        #'Perceptron_Default': PerceptronAlg_Default()
+        'NearestCentroid_Default': NearestCentroidAlg_Default(),
+        'LinearSVC_Default': LinearSVCAlg_Default(),
+        'LinearSVC_Balanced': LinearSVCAlg_Balanced(),
+        'LinearSVCAlg_Extra': LinearSVCAlg_Extra(),
+        'SVCAlg_RBF_Default': SVCAlg_RBF_Default(),
+        'SVCAlg_RBF_Aggr': SVCAlg_RBF_Aggr(),
+        'PAA_I_Default': PAA_I_Default(),
+        'PAA_II_Default': PAA_II_Default(),
+        'PAA_II_Balanced': PAA_II_Balanced(),
+        'kNN_Default': KNeighborsAlg_Default(),
+        'RandomForest_Default': RandomForestAlg_Default(),
+        'RandomForest_Mod1': RandomForestAlg_Mod1(),
+        'RandomForest_Mod2': RandomForestAlg_Mod2(),
+        'RandomForest_Mod3': RandomForestAlg_Mod3(),
+        'RandomForest_Mod4': RandomForestAlg_Mod4(),
+        'Perceptron_Default': PerceptronAlg_Default()
         }
 
 run_tests_for_search_of_best_algs_combi()
 #run_single_algs_test()
-
-
-#this function computes subset accuracy
-#accuracy_score(y_test, y_pred)
-#accuracy_score(y_test, y_pred, normalize=False)
-
-#Making the Confusion Matrix
-#cm = confusion_matrix(y_test, y_pred)
-#print(cm)
-
-# Applying k-Fold Cross Validation
-#accuracies = cross_val_score(estimator = alg.clf, X = X_train, y = y_train, cv = 10)
-#accuracies.mean()
-#accuracies.std()
-
-
