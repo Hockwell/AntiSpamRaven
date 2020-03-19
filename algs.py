@@ -13,6 +13,8 @@ from sklearn.neighbors.nearest_centroid import NearestCentroid
 import numpy as np
 
 class MLAlgorithm():
+    n_jobs = -1 #multi-threading mode для тех алгоритмов, которые могут работать в многопотоке при бинарной классификации (централизованная настройка)
+
     def learn(self, X_train, y_train):
         self._clf.fit(X_train , y_train)
 
@@ -39,7 +41,7 @@ class SGDAlg_Default(MLAlgorithm):
     def __init__(self):
         self._clf = SGDClassifier() #LinearSVC с градиентным спуском
 
-class SGDAlg_LogLoss(MLAlgorithm):
+class SGDAlg_LogLoss(MLAlgorithm): #логистическая регрессия с градиентным спуском
     def __init__(self):
         self._clf = SGDClassifier(loss='log')
 
@@ -93,23 +95,39 @@ class RidgeAlg_Default(MLAlgorithm): #Least-squares support-vector machine
     
 class KNeighborsAlg_Default(MLAlgorithm):
     def __init__(self):
-        self._clf = KNeighborsClassifier()
+        self._clf = KNeighborsClassifier(n_jobs = self.n_jobs)
 
 class RandomForestAlg_Small(MLAlgorithm):
     def __init__(self):
-        self._clf = RandomForestClassifier(n_estimators=10)
+        self._clf = RandomForestClassifier(n_jobs = self.n_jobs, n_estimators=10)
 
 class RandomForestAlg_Medium(MLAlgorithm):
     def __init__(self):
-        self._clf = RandomForestClassifier(n_estimators=50)
+        self._clf = RandomForestClassifier(n_jobs = self.n_jobs, n_estimators=50)
 
 class RandomForestAlg_Big(MLAlgorithm):
     def __init__(self):
-        self._clf = RandomForestClassifier(n_estimators=500)
+        self._clf = RandomForestClassifier(n_jobs = self.n_jobs, n_estimators=300)
 
 class RandomForestAlg_Default(MLAlgorithm):
     def __init__(self):
-        self._clf = RandomForestClassifier(n_estimators=100)
+        self._clf = RandomForestClassifier(n_jobs = self.n_jobs, n_estimators=100)
+
+class RandomForestAlg_BigBootstrap75(MLAlgorithm):
+    def __init__(self):
+        self._clf = RandomForestClassifier(n_jobs = self.n_jobs, n_estimators=300, max_samples=0.75)
+
+class RandomForestAlg_Bootstrap90(MLAlgorithm):
+    def __init__(self):
+        self._clf = RandomForestClassifier(n_jobs = self.n_jobs, max_samples=0.9)
+
+class RandomForestAlg_MDepth20(MLAlgorithm):
+    def __init__(self):
+        self._clf = RandomForestClassifier(n_jobs = self.n_jobs, max_depth=20)
+
+class RandomForestAlg_Balanced(MLAlgorithm):
+    def __init__(self):
+        self._clf = RandomForestClassifier(n_jobs = self.n_jobs, class_weight="balanced")
         
 class PerceptronAlg_Default(MLAlgorithm): # is equivalent to SGDClassifier(loss="perceptron", eta0=1, learning_rate="constant", penalty=None).
     def __init__(self):
