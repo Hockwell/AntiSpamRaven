@@ -10,22 +10,21 @@ from datasets_preprocessing import *
 from algs import *
 from logs import *
 from feature_extraction import *
-from ml_algs_search import *
+from ml_algs_validation import *
 from generic import *
 
 def set_libs_settings():
     ax = sns.set(style="darkgrid")
 
 def run_single_algs_test():
-    for alg in algs.items():
+    for alg in algs_for_bagging_combis.items():
         y_pred = alg[1].learn_predict(X_train, X_test, y_train)
         print(alg[0],': ', accuracy_score(y_test, y_pred))
     print('//////////////////////////// single alg test done')
 
 def run_tests_for_search_of_best_algs_combi():
     def run_searcher_on_dataset(X,y, k_folds, max_combination_length = 4):
-        algs_searcher = AlgsBestCombinationSearcher()
-        algs_searcher.run(X, y, k_folds, algs, max_combination_length)
+        AlgsCombinationsValidator.run(X, y, k_folds, algs_dicts, enabled_combinations_types, max_combination_length)
         print('//////////////////////////// algs search done')
     
     def print_dataset_properties():
@@ -59,14 +58,14 @@ def run_tests_for_search_of_best_algs_combi():
         print_dataset_properties()
         X_train, y_train, X_test, y_test = DatasetInstruments.make_shuffle_stratified_split_on_folds(X,y, test_size = 0.25, n_splits=1)[0]
         #visualize_dataset()
-        run_searcher_on_dataset(X, y, **research_params, k_folds=10)
+        run_searcher_on_dataset(X, y, k_folds=10, **research_params)
         move_results_to_specific_dir() #они уже экспортированы, но лежат в общем каталоге по умолчанию, их нужно перенести
         LogsFileProvider.delete_log_files_on_hot()
     LogsFileProvider.shutdown()
 
 set_libs_settings()
 
-#Работа с любым датасетом - это прохождение необходимых этапов: 1) предобработка, 2) извлечение признаков, 3) тестирование с комбинациями,
+#Работа с любым датасетом - это прохождение необходимых этапов: 1) предобработка, 2) извлечение признаков, 3) тестирование (типы проверяемых комбинаций указываются вне сценариев),
 #поэтому и созданы "тестовые сценарии", любой сценарий здесь можно задать или легко модифицировать старые. 
 #Сценарии можно отключать простым комментированием. Эти сценарии можно сделать совместимыми с любым исследовательским кодом.
 #{ scenarios_name: ( (corpus,y), (extractor,{params}), {research_params} ) }
@@ -77,25 +76,53 @@ kagle2016_preproc1 = KagleSMS2016DatasetPreprocessors().preprocessor_1()
 
 #название сценария будет использовано для названия каталога логов
 test_scenarios = {
-    'K2017_Email pr1 Tfidf1(ngram=(1,1))': 
+    'K2017_Email pr1 Tfidf1(ngram=(1,1))': #done 20/03
     ( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ), #( (corpus,y), (extractor_func, extractor_params), research_params )
     #'K2017_Email pr1 Tfidf1(ngram=(1,2))': 
-    #( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ),
-    'E_Email pr1 Tfidf1(ngram=(1,1))': 
-    ( enron_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ),
+    #( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ), #done 20/03
+    #'E_Email pr1 Tfidf1(ngram=(1,1))': 
+    #( enron_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ),
     #'E_Email pr1 Tfidf1(ngram=(1,2))': 
     #( enron_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ),
-    'K2016_SMS pr1 Tfidf1(ngram=(1,1))': 
-    ( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ),
+    #'K2016_SMS pr1 Tfidf1(ngram=(1,1))': 
+    #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ),
     #'K2016_SMS pr1 Tfidf1(ngram=(1,2))': 
-    #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ),
+    #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ), #done 20/03
     #'K2016_SMS pr1 Tfidf1(ngram=(1,3))': 
     #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,3)}), {} ),
     #'K2016_SMS pr1 Tfidf1(ngram=(2,2))': 
     #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(2,2)}), {} ),
     }
 
-algs = {
+algs_for_SA_DC_CC = {
+        'ComplementNB_Default': ComplementNBAlg_Default(),
+        'SGDClf_Default': SGDAlg_Default(),
+        'SGDAlg_AdaptiveIters': SGDAlg_AdaptiveIters(),
+        'SGDAlg_LogLoss': SGDAlg_LogLoss(),
+        #'ASGDAlg_Default': ASGDAlg_Default(),
+        #'NearestCentroid_Default': NearestCentroidAlg_Default(),
+        #'LinearSVC_Default': LinearSVCAlg_Default(),
+        #'LinearSVC_Balanced': LinearSVCAlg_Balanced(),
+        #'LinearSVCAlg_MoreSupports': LinearSVCAlg_MoreSupports(),
+        #'SVCAlg_RBF_Default': SVCAlg_RBF_Default(),
+        #'SVCAlg_RBF_Aggr': SVCAlg_RBF_Aggr(),
+        #'PAA_I_Default': PAA_I_Default(),
+        #'PAA_II_Default': PAA_II_Default(),
+        #'PAA_II_Balanced': PAA_II_Balanced(),
+        #'kNN_Default': KNeighborsAlg_Default(),
+        #'RandomForest_Default': RandomForestAlg_Default(),
+        #'RandomForest_Big': RandomForestAlg_Big(),
+        #'RandomForest_Medium': RandomForestAlg_Medium(),
+        #'RandomForest_Small': RandomForestAlg_Small(),
+        #'RandomForest_MDepth20': RandomForestAlg_MDepth20(),
+        #'RandomForest_MDepth30': RandomForestAlg_MDepth30(),
+        #'RandomForest_BigBootstrap75': RandomForestAlg_BigBootstrap75(),
+        #'RandomForest_Bootstrap90': RandomForestAlg_Bootstrap90(),
+        #'RandomForest_Balanced': RandomForestAlg_Balanced(),
+        #'Perceptron_Default': PerceptronAlg_Default()
+        }
+
+algs_for_MC = {
         'ComplementNB_Default': ComplementNBAlg_Default(),
         'SGDClf_Default': SGDAlg_Default(),
         'SGDAlg_AdaptiveIters': SGDAlg_AdaptiveIters(),
@@ -104,20 +131,32 @@ algs = {
         'NearestCentroid_Default': NearestCentroidAlg_Default(),
         'LinearSVC_Default': LinearSVCAlg_Default(),
         'LinearSVC_Balanced': LinearSVCAlg_Balanced(),
-        'LinearSVCAlg_Extra': LinearSVCAlg_Extra(),
+        'LinearSVCAlg_MoreSupports': LinearSVCAlg_MoreSupports(),
         'SVCAlg_RBF_Default': SVCAlg_RBF_Default(),
         'SVCAlg_RBF_Aggr': SVCAlg_RBF_Aggr(),
         'PAA_I_Default': PAA_I_Default(),
         'PAA_II_Default': PAA_II_Default(),
         'PAA_II_Balanced': PAA_II_Balanced(),
         'kNN_Default': KNeighborsAlg_Default(),
-        'RandomForest_Default': RandomForestAlg_Default(),
-        'RandomForest_Mod1': RandomForestAlg_Mod1(),
-        'RandomForest_Mod2': RandomForestAlg_Mod2(),
-        'RandomForest_Mod3': RandomForestAlg_Mod3(),
-        'RandomForest_Mod4': RandomForestAlg_Mod4(),
         'Perceptron_Default': PerceptronAlg_Default()
         }
+
+enabled_combinations_types = { #single algs (SA) validation включено по умолчанию
+    'DC': True,
+    'CC': True,
+    'MC': False,
+    'BAGC': False,
+    'BOOSTC': False,
+    'STACKC': False
+    }
+
+algs_dicts = {
+    'TRIVIAL': algs_for_SA_DC_CC,
+    'MC': algs_for_MC,
+    'BAGC': None,
+    'BOOSTC': None,
+    'STACKC': None
+    }
 
 run_tests_for_search_of_best_algs_combi()
 #run_single_algs_test()

@@ -27,13 +27,15 @@ class LogsFileProvider(object): #Singleton
             
             self.loggers = {
                 'ml_research_calculations': self.__init_logger('logger', LogsFileProvider.LOGS_DIR + "ml_research_calcs.log"),
-                'ml_ODC_sorted_f1': self.__init_logger('logger2', LogsFileProvider.LOGS_DIR+"ml_ODC_sorted_f1.log"),
-                'ml_ODC_sorted_recall': self.__init_logger('logger3', LogsFileProvider.LOGS_DIR + "ml_ODC_sorted_recall.log"),
-                'ml_OCC_sorted_f1': self.__init_logger('logger21', LogsFileProvider.LOGS_DIR+"ml_OCC_sorted_f1.log"),
-                'ml_OCC_sorted_recall': self.__init_logger('logger31', LogsFileProvider.LOGS_DIR+"ml_OCC_sorted_recall.log"),
-                'ml_ODC_OCC_sorted_f1': self.__init_logger('logger40', LogsFileProvider.LOGS_DIR+"ml_ODC_OCC_sorted_f1.log"),
-                'ml_ODC_OCC_sorted_recall': self.__init_logger('logger41', LogsFileProvider.LOGS_DIR + "ml_ODC_OCC_sorted_recall.log"),
-                'ml_single_algs_sorted_f1': self.__init_logger('logger5', LogsFileProvider.LOGS_DIR +"ml_single_algs_sorted_f1.log")
+                'ml_DC_sorted_f1': self.__init_logger('logger2', LogsFileProvider.LOGS_DIR + "ml_DC_sorted_f1.log"),
+                'ml_DC_sorted_recall': self.__init_logger('logger3', LogsFileProvider.LOGS_DIR + "ml_DC_sorted_recall.log"),
+                'ml_CC_sorted_f1': self.__init_logger('logger21', LogsFileProvider.LOGS_DIR + "ml_CC_sorted_f1.log"),
+                'ml_CC_sorted_recall': self.__init_logger('logger31', LogsFileProvider.LOGS_DIR + "ml_CC_sorted_recall.log"),
+                'ml_MAJ_sorted_f1': self.__init_logger('logger61', LogsFileProvider.LOGS_DIR + "ml_MAJ_sorted_f1.log"),
+                'ml_MAJ_sorted_recall': self.__init_logger('logger71', LogsFileProvider.LOGS_DIR + "ml_MAJ_sorted_recall.log"),
+                'ml_ALL_sorted_f1': self.__init_logger('logger40', LogsFileProvider.LOGS_DIR + "ml_ALL_sorted_f1.log"),
+                'ml_ALL_sorted_recall': self.__init_logger('logger41', LogsFileProvider.LOGS_DIR + "ml_ALL_sorted_recall.log"),
+                'ml_SA_sorted_f1': self.__init_logger('logger5', LogsFileProvider.LOGS_DIR + "ml_SA_sorted_f1.log")
                 }
 
         def __init_logger(self,logger_name, logfile_path):

@@ -116,6 +116,7 @@ class CollectionsInstruments(ABC):
             del dict_[key]
 class MathInstruments(ABC):
     @staticmethod
-    def make_subsets(iterable,k):
+    def make_subsets(iterable, k):
+        #генерим неповторяющиеся подмножества размерами от 1 до k 
         list_ = list(iterable)
         return list(chain.from_iterable(combinations(list_,k_i) for k_i in range(1,k))) 

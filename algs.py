@@ -65,9 +65,9 @@ class LinearSVCAlg_Balanced(MLAlgorithm):
     def __init__(self):
         self._clf = svm.LinearSVC(class_weight='balanced', loss='squared_hinge')
 
-class LinearSVCAlg_Extra(MLAlgorithm): 
+class LinearSVCAlg_MoreSupports(MLAlgorithm): 
     def __init__(self):
-        self._clf = svm.LinearSVC(loss='squared_hinge', tol=0.1, max_iter=4000)
+        self._clf = svm.LinearSVC(loss='squared_hinge', tol=0.1)
 
 class SVCAlg_RBF_Default(MLAlgorithm):
     def __init__(self):
@@ -124,6 +124,10 @@ class RandomForestAlg_Bootstrap90(MLAlgorithm):
 class RandomForestAlg_MDepth20(MLAlgorithm):
     def __init__(self):
         self._clf = RandomForestClassifier(n_jobs = self.n_jobs, max_depth=20)
+
+class RandomForestAlg_MDepth30(MLAlgorithm):
+    def __init__(self):
+        self._clf = RandomForestClassifier(n_jobs = self.n_jobs, max_depth=30)
 
 class RandomForestAlg_Balanced(MLAlgorithm):
     def __init__(self):
