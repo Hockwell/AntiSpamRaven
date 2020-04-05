@@ -116,7 +116,9 @@ class CollectionsInstruments(ABC):
             del dict_[key]
 class MathInstruments(ABC):
     @staticmethod
-    def make_subsets(iterable, k):
-        #генерим неповторяющиеся подмножества размерами от 1 до k 
+    def make_subsets(iterable, max_length):
+        #Сочетания без повторений (n,k) для всех k до заданного - это и есть все подмножества
+        #algs НЕ должен компоноваться элементами None (нет алгоритма)
+        #генерим неповторяющиеся подмножества размерами от 1 до max_length
         list_ = list(iterable)
-        return list(chain.from_iterable(combinations(list_,k_i) for k_i in range(1,k))) 
+        return list(chain.from_iterable(combinations(list_,k_i) for k_i in range(1,max_length + 1))) 

@@ -22,10 +22,10 @@ def run_single_algs_test():
         print(alg[0],': ', accuracy_score(y_test, y_pred))
     print('//////////////////////////// single alg test done')
 
-def run_tests_for_search_of_best_algs_combi():
+def run_algs_validation():
     def run_searcher_on_dataset(X,y, k_folds, max_combination_length = 4):
         AlgsCombinationsValidator.run(X, y, k_folds, algs_dicts, enabled_combinations_types, max_combination_length)
-        print('//////////////////////////// algs search done')
+        print('//////////////////////////// algs validation done')
     
     def print_dataset_properties():
         print("Соотношение классов:")
@@ -94,12 +94,13 @@ test_scenarios = {
     #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(2,2)}), {} ),
     }
 
-algs_for_SA_DC_CC = {
+#в валидатор для тривиальных надо передавать всегда самый полный список алгоритмов, чтобы фильтрация результатов полноценно работала
+algs_for_trivial_combis = {
         'ComplementNB_Default': ComplementNBAlg_Default(),
         'SGDClf_Default': SGDAlg_Default(),
         'SGDAlg_AdaptiveIters': SGDAlg_AdaptiveIters(),
         'SGDAlg_LogLoss': SGDAlg_LogLoss(),
-        #'ASGDAlg_Default': ASGDAlg_Default(),
+        'ASGDAlg_Default': ASGDAlg_Default(),
         #'NearestCentroid_Default': NearestCentroidAlg_Default(),
         #'LinearSVC_Default': LinearSVCAlg_Default(),
         #'LinearSVC_Balanced': LinearSVCAlg_Balanced(),
@@ -125,38 +126,37 @@ algs_for_SA_DC_CC = {
 algs_for_MC = {
         'ComplementNB_Default': ComplementNBAlg_Default(),
         'SGDClf_Default': SGDAlg_Default(),
-        'SGDAlg_AdaptiveIters': SGDAlg_AdaptiveIters(),
         'SGDAlg_LogLoss': SGDAlg_LogLoss(),
         'ASGDAlg_Default': ASGDAlg_Default(),
-        'NearestCentroid_Default': NearestCentroidAlg_Default(),
-        'LinearSVC_Default': LinearSVCAlg_Default(),
-        'LinearSVC_Balanced': LinearSVCAlg_Balanced(),
-        'LinearSVCAlg_MoreSupports': LinearSVCAlg_MoreSupports(),
-        'SVCAlg_RBF_Default': SVCAlg_RBF_Default(),
-        'SVCAlg_RBF_Aggr': SVCAlg_RBF_Aggr(),
-        'PAA_I_Default': PAA_I_Default(),
-        'PAA_II_Default': PAA_II_Default(),
-        'PAA_II_Balanced': PAA_II_Balanced(),
-        'kNN_Default': KNeighborsAlg_Default(),
-        'Perceptron_Default': PerceptronAlg_Default()
+        #'NearestCentroid_Default': NearestCentroidAlg_Default(),
+        #'LinearSVC_Default': LinearSVCAlg_Default(),
+        #'LinearSVC_Balanced': LinearSVCAlg_Balanced(),
+        #'LinearSVCAlg_MoreSupports': LinearSVCAlg_MoreSupports(),
+        #'SVCAlg_RBF_Default': SVCAlg_RBF_Default(),
+        #'SVCAlg_RBF_Aggr': SVCAlg_RBF_Aggr(),
+        #'PAA_I_Default': PAA_I_Default(),
+        #'PAA_II_Default': PAA_II_Default(),
+        #'PAA_II_Balanced': PAA_II_Balanced(),
+        #'kNN_Default': KNeighborsAlg_Default(),
+        #'Perceptron_Default': PerceptronAlg_Default()
         }
 
 enabled_combinations_types = { #single algs (SA) validation включено по умолчанию
     'DC': True,
     'CC': True,
-    'MC': False,
+    'MC': True,
     'BAGC': False,
     'BOOSTC': False,
     'STACKC': False
     }
 
 algs_dicts = {
-    'TRIVIAL': algs_for_SA_DC_CC,
+    'TRIVIAL': algs_for_trivial_combis,
     'MC': algs_for_MC,
     'BAGC': None,
     'BOOSTC': None,
     'STACKC': None
     }
 
-run_tests_for_search_of_best_algs_combi()
+run_algs_validation()
 #run_single_algs_test()
