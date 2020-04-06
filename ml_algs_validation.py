@@ -46,7 +46,7 @@
 import numpy as np
 
 from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score, roc_auc_score
-from sklearn.ensemble import VotingClassifier
+from sklearn.ensemble import VotingClassifier, BaggingClassifier
 
 from enum import Enum
 import time
@@ -106,6 +106,13 @@ class AlgsCombinationsValidator(): #алгоритмические комбин�
         def export_united_results_for_all_combis_types():
             self._export_results(all_types_combis_dict, 3, tcv._algs_SA, enabled_removers, enabled_highlighters)
 
+        def postprocess_and_export_DC_CC_MC_BAGC(validator_obj, algs_SA_full, algs_SA_filtered, algs_combis, logger_num, combis_type_cls = None):
+            algs_combis_filtered = validator_obj._postprocess_results(algs_combis, algs_SA_full, enabled_removers, combis_type_cls)
+            all_types_combis_dict.update(algs_combis_filtered)
+            #все комбинации в своём логе должны быть смешаны и сравнены с обычными алгоритмами-одиночками - так будет наглядно показан смысл комбинирования или его
+            #отсутствие
+            validator_obj._export_results({**algs_SA_filtered,**algs_combis_filtered}, logger_num, algs_SA_full, enabled_removers, enabled_highlighters)
+
         #здесь должны быть указаны все возможные ремуверы и хайлайтеры, далее код сам разберётся что он может использовать, а что нет
         enabled_removers = {'combis_with_bad_metrics_vals_remover': True,
         'useless_combis_remover': True,
@@ -126,23 +133,14 @@ class AlgsCombinationsValidator(): #алгоритмические комбин�
         tcv._export_results(algs_SA_filtered, 4, tcv._algs_SA, enabled_removers_SA, enabled_highlighters_SA)
         
         if enabled_combinations_types['DC']:
-            algs_DC_filtered = tcv._postprocess_results(tcv._algs_DC, tcv._algs_SA,enabled_removers)
-            all_types_combis_dict.update(algs_DC_filtered)
-            tcv._export_results({**algs_SA_filtered,**algs_DC_filtered}, 2, tcv._algs_SA, enabled_removers, enabled_highlighters)
+            postprocess_and_export_DC_CC_MC_BAGC(tcv, tcv._algs_SA, algs_SA_filtered, tcv._algs_DC, 2)
         if enabled_combinations_types['CC']:
-            algs_CC_filtered = tcv._postprocess_results(tcv._algs_CC, tcv._algs_SA, enabled_removers)
-            all_types_combis_dict.update(algs_CC_filtered)
-            tcv._export_results({**algs_SA_filtered, **algs_CC_filtered}, 1, tcv._algs_SA, enabled_removers, enabled_highlighters)
+            postprocess_and_export_DC_CC_MC_BAGC(tcv, tcv._algs_SA, algs_SA_filtered, tcv._algs_DC, 1)
         if enabled_combinations_types['MC']:
-            algs_MC_filtered = ccv._postprocess_results(ccv._algs_MC, tcv._algs_SA, enabled_removers, MajorityCombisFiltration)
-            all_types_combis_dict.update(algs_MC_filtered)
-            ccv._export_results({**algs_SA_filtered, **algs_MC_filtered}, 5, tcv._algs_SA, enabled_removers, enabled_highlighters)
-
+            postprocess_and_export_DC_CC_MC_BAGC(ccv, tcv._algs_SA, algs_SA_filtered, ccv._algs_MC, 5, MajorityCombisFiltration)
+        if enabled_combinations_types['BAGC']:
+            postprocess_and_export_DC_CC_MC_BAGC(ccv, tcv._algs_SA, algs_SA_filtered, ccv._algs_BAGC, 6, BaggingCombisFiltration)
         export_united_results_for_all_combis_types()
-
-    #@abstractmethod
-    #def _postprocess_and_export_results(self, **params): 
-    #    ...
 
     @abstractmethod 
     def _remove_bad_combis(self, combis_dict_filtered, combis_dict_full, algs_SA, enabled_removers, combis_type_cls = None):
@@ -204,7 +202,8 @@ class AlgsCombinationsValidator(): #алгоритмические комбин�
             return lfp.loggers['ml_SA_sorted_f1'], None
         if (results_from == 5):
             return lfp.loggers['ml_MC_sorted_f1'], lfp.loggers['ml_MC_sorted_recall']
-
+        if (results_from == 6):
+            return lfp.loggers['ml_BAGC_sorted_f1'], lfp.loggers['ml_BAGC_sorted_recall']
     def _export_results(self, algs_combis_dict, results_from, algs_SA, enabled_removers, enabled_highlighters): 
         
         #enable_best_combis_with_unique_algs_filter = True, если сортировка только по убыванию качества
@@ -227,7 +226,7 @@ class AlgsCombinationsValidator(): #алгоритмические комбин�
             CollectionsInstruments.round_dict_vals(algs_combis_dict[combi_name].quality_metrics, 
                                              AlgsCombinationsValidator._perf_metrics_exported_vals_decimal_places, self._PERFOMANCE_METRICS)
     
-    def _postprocess_results(self, algs_combis, algs_SA, enabled_removers, combis_type_cls = None):
+    def _postprocess_results(self, algs_combis, algs_SA_full, enabled_removers, combis_type_cls = None):
             #Для экспорта используются копии объектов, поскольку исследовательские данные и данные для экспорта, особенно при использовании
     #фильтров, парой сильно отличаются, но для той же фильтрации нужны именно исходные, т.е. исследовательские данные - их
     #нельзя менять или удалять. К тому же, должна быть возможность всегда использовать именно исследовательские данные,
@@ -236,7 +235,7 @@ class AlgsCombinationsValidator(): #алгоритмические комбин�
         #фильтрация производится на основе округлённых значений, нет смысла разделять работу фильтрации и 
     #печати результатов
         self._roundOff_metrics_of_combis(algs_combis_filtered)
-        self._remove_bad_combis(algs_combis_filtered, algs_combis, algs_SA, enabled_removers, combis_type_cls) 
+        self._remove_bad_combis(algs_combis_filtered, algs_combis, algs_SA_full, enabled_removers, combis_type_cls) 
         return algs_combis_filtered
     
     def _export_sorted_by(self, logger, criterias_list, algs_combis_dict_items, algs_SA, enabled_removers, enabled_highlighters):
@@ -255,7 +254,7 @@ class AlgsCombinationsValidator(): #алгоритмические комбин�
         LogsFileProvider.log_named_info_block(logger, AlgsCombinationsValidator._make_searcher_results_str(sorted_algs_combis_di), 
                                     log_header="//// ALL COMBINATIONS ////")
 
-    def _init_algs_combis(self, algs_subsets, combis_dict, combis_type_cls, combis_type = None, 
+    def _init_combis(self, algs_subsets, combis_dict, combis_type_cls, combis_type = None, 
                           min_length = 1, max_length = _max_combination_length): #add in-place
         for subset in algs_subsets: 
             #в зависимости от min/max_length фильтруем список комбинаций
@@ -299,14 +298,13 @@ class ComplexCombinationsValidator(AlgsCombinationsValidator):
     class ComplexCombination(AlgsCombinationsValidator.AlgsCombination, ABC): #стекинг, бэггинг...
         def __init__(self, algs_names, algs_objs):
             super().__init__(algs_names, algs_objs)
-        
-        @abstractmethod
-        def fit(self, X, y):
-            ...
+            self._clf = None
 
-        @abstractmethod
+        def fit(self, X, y):
+            self._clf.fit(X, y)
+
         def predict(self, X):
-            ...
+            return self._clf.predict(X)
         
         @abstractmethod
         def create_name(self, combi_type_name):
@@ -315,15 +313,10 @@ class ComplexCombinationsValidator(AlgsCombinationsValidator):
     class BaggingCombination(ComplexCombination):
         def __init__(self, algs_names, algs_objs):
             super().__init__(algs_names, algs_objs)
-
-        def fit(self, X, y):
-            pass
-
-        def predict(self, X):
-            pass
+            self._clf = BaggingClassifier(base_estimator=algs_objs[0].clf, n_estimators=10)
 
         def create_name(self):
-            return super().create_name('BAGC')
+            return super().create_name('BAGGING')
 
     class MajorityCombination(ComplexCombination):
         def __init__(self, algs_names, algs_objs):
@@ -333,27 +326,16 @@ class ComplexCombinationsValidator(AlgsCombinationsValidator):
                 estimators_.append((algs_names[i], algs_objs[i].clf))
             self._clf = VotingClassifier(estimators=estimators_)
 
-        def fit(self, X, y):
-            self._clf.fit(X, y)
-
-        def predict(self, X):
-            return self._clf.predict(X)
-
         def create_name(self):
-            return super().create_name('MC')
+            return super().create_name('MAJORITY')
 
     class BoostingCombination(ComplexCombination):
         def __init__(self, algs_names, algs_objs):
             super().__init__(algs_names, algs_objs)
-
-        def fit(self, X, y):
-            pass
-
-        def predict(self, X):
-            pass
+            
 
         def create_name(self):
-            return super().create_name('BOOSTC')
+            return super().create_name('BOOSTING')
 
     class StackingCombination(ComplexCombination): 
         #algs_names=[[{alg_names_layer1}],[],..,[]]
@@ -371,7 +353,7 @@ class ComplexCombinationsValidator(AlgsCombinationsValidator):
             pass
 
         def create_name(self):
-            return super().create_name('STACKC')
+            return super().create_name('STACKING')
 
     def _init_combination(self, **args):
         return args['combi_type_cls'](args['algs_names'], args['algs_objs'])
@@ -379,28 +361,30 @@ class ComplexCombinationsValidator(AlgsCombinationsValidator):
     def __init__(self, algs_dicts, enabled_types):
         def init_combis_of_type(algs_dict, combis_dict, combis_type_cls, min_length = 2, max_length=AlgsCombinationsValidator._max_combination_length):
             algs_subsets = MathInstruments.make_subsets(algs_dict, max_length)
-            self._init_algs_combis(algs_subsets, combis_dict, combis_type_cls = combis_type_cls, min_length = 2, max_length = max_length) 
+            self._init_combis(algs_subsets, combis_dict, combis_type_cls = combis_type_cls, min_length = min_length, max_length = max_length) 
 
         if enabled_types['MC']:
             self._algs_MC = {}
             init_combis_of_type(algs_dicts['MC'].items(), self._algs_MC, self.MajorityCombination, min_length = 2)
-        if enabled_types['BAGC']:
+        if enabled_types['BAGC']: #для бэггинга нужен другой метод инициализаци (init_BAGC_BOOSTC()) и, поскольку не сабсеты используются, а дублирующиеся алгоритмы одиночки
+            #такой метод подойдёт и для бустинга,поэтому его стоит определить только в рамках complex validator-а. 
             self._algs_BAGC = {}
-            init_combis_of_type(algs_dicts['BAGC'].items(), self._algs_BAGC, self.BaggingCombination, min_length = 2)
+            init_combis_of_type(algs_dicts['BAGC'].items(), self._algs_BAGC, self.BaggingCombination, min_length = 1, max_length=1)
         if enabled_types['BOOSTC']:
             self._algs_BOOSTC = {}
-            init_combis_of_type(algs_dicts['BOOSTC'].items(), self._algs_BOOSTC, self.BoostingCombination, min_length = 2)
+            init_combis_of_type(algs_dicts['BOOSTC'].items(), self._algs_BOOSTC, self.BoostingCombination, min_length = 1, max_length=1)
         if enabled_types['STACKC']:
             self._algs_STACKC = {}
-            init_combis_of_type(algs_dicts['STACKC'].items(), self._algs_STACKC, self.StackingCombination, min_length = 2)
+            #init_combis_of_type(algs_dicts['STACKC'].items(), self._algs_STACKC, self.StackingCombination, min_length = 2)
         self._enabled_combis_types = enabled_types
 
     def _validate(self, **params):
         if self._enabled_combis_types['MC']:
             self.__validate_combis_on_folds(self._algs_MC)
             print('////////////////// MC validation done')
-        #if self._enabled_combis_types['BAGC']:
-            
+        if self._enabled_combis_types['BAGC']:
+            self.__validate_combis_on_folds(self._algs_BAGC)
+            print('////////////////// BAGC validation done')
         #if self._enabled_combis_types['BOOSTC']:
             
         #if self._enabled_combis_types['STACKC']:
@@ -475,15 +459,15 @@ class TrivialCombinationsValidator(AlgsCombinationsValidator):
         #[ [(alg_i_name, alg_i_obj),(),()...],[],[]... ]
 
         self._algs_SA = {} #алгоритмы по одиночке (длина комбинации = 1)
-        self._init_algs_combis(algs_subsets, self._algs_SA, self.TrivialCombination, self.TrivialCombination.Types.SINGLE, min_length=1, max_length=1)
+        self._init_combis(algs_subsets, self._algs_SA, self.TrivialCombination, self.TrivialCombination.Types.SINGLE, min_length=1, max_length=1)
 
         if enable_DC:
             self._algs_DC = {} #длина больше 1
-            self._init_algs_combis(algs_subsets, self._algs_DC, self.TrivialCombination, self.TrivialCombination.Types.DISJUNCTIVE, min_length=2, 
+            self._init_combis(algs_subsets, self._algs_DC, self.TrivialCombination, self.TrivialCombination.Types.DISJUNCTIVE, min_length=2, 
                                    max_length=AlgsCombinationsValidator._max_combination_length)
         if enable_CC:
             self._algs_CC = {}
-            self._init_algs_combis(algs_subsets, self._algs_CC, self.TrivialCombination, self.TrivialCombination.Types.CONJUNCTIVE, min_length=2, 
+            self._init_combis(algs_subsets, self._algs_CC, self.TrivialCombination, self.TrivialCombination.Types.CONJUNCTIVE, min_length=2, 
                                    max_length=AlgsCombinationsValidator._max_combination_length)
         self.__enable_DC = enable_DC
         self.__enable_CC = enable_CC
@@ -622,7 +606,7 @@ class CombinationsFiltration(ABC):
             if type(combis_dict_filtered[combi_name]) is TrivialCombinationsValidator.TrivialCombination and not algs_SA_compatibility:
                 if combis_dict_filtered[combi_name].type == TrivialCombinationsValidator.TrivialCombination.Types.SINGLE:
                     continue
-            if condition_func(combis_dict_filtered[combi_name], **params):
+            if condition_func(combis_dict_filtered[combi_name], params):
                 #Раскомментировать для логирования
                 #LogsFileProvider().loggers['ml_research_calculations'].info(combi_name)
                 keys_removal_list.append(combi_name)
@@ -634,8 +618,8 @@ class CombinationsFiltration(ABC):
     #поэтому если комбинация не лучше в prec или rec, то она считается бесполезной
     #если требуется уточнение "на сколько лучше", то менять необходимо кол-во знаков после запятой
     @abstractstaticmethod
-    def _remove_useless_combis(combis_dict_filtered, algs_SA):
-        def is_combi_useless(combi, comparing_metrics=['rec','prec']):
+    def _remove_useless_combis(combis_dict_filtered, algs_SA, comparing_metrics=['rec','prec']):
+        def is_combi_useless(combi, comparing_metrics=comparing_metrics):
             def is_combi_metrics_not_better(algs_combi_metrics, single_algs_metrics): 
                 #векторизированное сравнение, кол-во метрик может быть любым
                 metrics_of_combi = np.array([algs_combi_metrics[metric] for metric in comparing_metrics])
@@ -647,7 +631,7 @@ class CombinationsFiltration(ABC):
                 return False
             single_algs_metrics = [copy.deepcopy(algs_SA[alg_name].quality_metrics)            
                                     for alg_name in combi.algs_names] #алгоритмы участники комбинации
-
+            #в исходном виде (не для экспорта) в комбинациях хранятся метрики не округленные
             for alg_metrics in single_algs_metrics:
                 CollectionsInstruments.round_dict_vals(alg_metrics, 
                                                         AlgsCombinationsValidator._det_metrics_exported_vals_decimal_places, AlgsCombinationsValidator._DETECTION_METRICS)
@@ -775,7 +759,17 @@ class TrivialCombisFiltration(CombinationsFiltration, ABC):
         CombinationsFiltration._remove_useless_combis(combis_dict_filtered, algs_SA)
 
 class BaggingCombisFiltration(CombinationsFiltration, ABC):
-    pass
+    @staticmethod
+    def highlight_best_unique_algs_combis_in_results(algs_SA, sorted_combis_dict_items, entries_amount_of_each_alg = 1):
+        CombinationsFiltration.highlight_best_unique_algs_combis_in_results(algs_SA, sorted_combis_dict_items, entries_amount_of_each_alg)
+
+    @staticmethod
+    def remove_combis_with_bad_metrics_vals(combis_dict_filtered):
+        CombinationsFiltration._remove_combis_with_bad_metrics_vals(combis_dict_filtered)
+
+    @staticmethod
+    def remove_useless_combis(combis_dict_filtered, algs_SA):
+        CombinationsFiltration._remove_useless_combis(combis_dict_filtered, algs_SA)
 
 class MajorityCombisFiltration(CombinationsFiltration, ABC):
     @staticmethod

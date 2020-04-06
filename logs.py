@@ -33,6 +33,8 @@ class LogsFileProvider(object): #Singleton
                 'ml_CC_sorted_recall': self.__init_logger('logger31', LogsFileProvider.LOGS_DIR + "ml_CC_sorted_recall.log"),
                 'ml_MC_sorted_f1': self.__init_logger('logger61', LogsFileProvider.LOGS_DIR + "ml_MC_sorted_f1.log"),
                 'ml_MC_sorted_recall': self.__init_logger('logger71', LogsFileProvider.LOGS_DIR + "ml_MC_sorted_recall.log"),
+                'ml_BAGC_sorted_f1': self.__init_logger('logger81', LogsFileProvider.LOGS_DIR + "ml_BAGC_sorted_f1.log"),
+                'ml_BAGC_sorted_recall': self.__init_logger('logger82', LogsFileProvider.LOGS_DIR + "ml_BAGC_sorted_recall.log"),
                 'ml_ALL_sorted_f1': self.__init_logger('logger40', LogsFileProvider.LOGS_DIR + "ml_ALL_sorted_f1.log"),
                 'ml_ALL_sorted_recall': self.__init_logger('logger41', LogsFileProvider.LOGS_DIR + "ml_ALL_sorted_recall.log"),
                 'ml_SA_sorted_f1': self.__init_logger('logger5', LogsFileProvider.LOGS_DIR + "ml_SA_sorted_f1.log")
