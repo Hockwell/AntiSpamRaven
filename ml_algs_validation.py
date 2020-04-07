@@ -295,7 +295,7 @@ class AlgsCombinationsValidator(): #алгоритмические комбин�
 class ComplexCombinationsValidator(AlgsCombinationsValidator):
     #отличие от валидатора тривиальных, данный не предусматривает запоминание результатов предсказаний алгоритмов-одиночек и их последующее комбинирование,
     #т.к. алгоритмы-участники в сложных комбинациях от комбинации к комбинации находятся в разных условиях, а не фиксированных 
-    class ComplexCombination(AlgsCombinationsValidator.AlgsCombination, ABC): #стекинг, бэггинг...
+    class ComplexCombination(AlgsCombinationsValidator.AlgsCombination, ABC):
         def __init__(self, algs_names, algs_objs):
             super().__init__(algs_names, algs_objs)
             self._clf = None
@@ -310,21 +310,22 @@ class ComplexCombinationsValidator(AlgsCombinationsValidator):
         def create_name(self, combi_type_name):
             return combi_type_name + ': ' + str(self.algs_names)
 
-    class BaggingCombination(ComplexCombination):
+    class BaggingCombination(ComplexCombination): #n_jobs = -1 не работает
         def __init__(self, algs_names, algs_objs):
             super().__init__(algs_names, algs_objs)
-            self._clf = BaggingClassifier(base_estimator=algs_objs[0].clf, n_estimators=10)
+            self._clf = BaggingClassifier(base_estimator=algs_objs[0].clf, n_estimators=5, n_jobs = 1, bootstrap = True, max_samples=0.95)
 
         def create_name(self):
             return super().create_name('BAGGING')
 
-    class MajorityCombination(ComplexCombination):
+    class MajorityCombination(ComplexCombination): #n_jobs = -1 не работает и это критично, ибо очень медленно, учитывая простой принцип, хорошо бы написать
+        #свою реализацию с многопоточностью
         def __init__(self, algs_names, algs_objs):
             super().__init__(algs_names, algs_objs)
             estimators_ = []
             for i in range(len(algs_names)):
                 estimators_.append((algs_names[i], algs_objs[i].clf))
-            self._clf = VotingClassifier(estimators=estimators_)
+            self._clf = VotingClassifier(estimators=estimators_, n_jobs = 1)
 
         def create_name(self):
             return super().create_name('MAJORITY')
@@ -606,7 +607,7 @@ class CombinationsFiltration(ABC):
             if type(combis_dict_filtered[combi_name]) is TrivialCombinationsValidator.TrivialCombination and not algs_SA_compatibility:
                 if combis_dict_filtered[combi_name].type == TrivialCombinationsValidator.TrivialCombination.Types.SINGLE:
                     continue
-            if condition_func(combis_dict_filtered[combi_name], params):
+            if condition_func(combis_dict_filtered[combi_name], **params):
                 #Раскомментировать для логирования
                 #LogsFileProvider().loggers['ml_research_calculations'].info(combi_name)
                 keys_removal_list.append(combi_name)
@@ -619,7 +620,7 @@ class CombinationsFiltration(ABC):
     #если требуется уточнение "на сколько лучше", то менять необходимо кол-во знаков после запятой
     @abstractstaticmethod
     def _remove_useless_combis(combis_dict_filtered, algs_SA, comparing_metrics=['rec','prec']):
-        def is_combi_useless(combi, comparing_metrics=comparing_metrics):
+        def is_combi_useless(combi, comparing_metrics):
             def is_combi_metrics_not_better(algs_combi_metrics, single_algs_metrics): 
                 #векторизированное сравнение, кол-во метрик может быть любым
                 metrics_of_combi = np.array([algs_combi_metrics[metric] for metric in comparing_metrics])
@@ -639,7 +640,7 @@ class CombinationsFiltration(ABC):
                                                         AlgsCombinationsValidator._perf_metrics_exported_vals_decimal_places, AlgsCombinationsValidator._PERFOMANCE_METRICS)
             return is_combi_metrics_not_better(combi.quality_metrics, single_algs_metrics)
 
-        CombinationsFiltration._remove_combis_by_condition(is_combi_useless, combis_dict_filtered, False, {})
+        CombinationsFiltration._remove_combis_by_condition(is_combi_useless, combis_dict_filtered, False, {'comparing_metrics':comparing_metrics})
 
     #комбинации избыточной длинны - добавление нового алгоритма не улучшает никакие основные метрики
        #если к комбинации прикрепить ещё один и более алгоритмов, то комбинация останется избыточной,

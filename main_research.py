@@ -75,11 +75,16 @@ enron_preproc1 = EnronDatasetPreprocessors().preprocessor_1()
 kagle2016_preproc1 = KagleSMS2016DatasetPreprocessors().preprocessor_1()
 
 #название сценария будет использовано для названия каталога логов
+#данные сценарии тестируют те типы комбинаций, которые включены в переменных ниже, сценарии же сами по себе не определяют это
 test_scenarios = {
-    'K2017_Email pr1 Tfidf1(ngram=(1,1))': #done 20/03
+    'K2017_Email pr1 Tfidf1(ngram=(1,1))': #done 06/04
     ( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ), #( (corpus,y), (extractor_func, extractor_params), research_params )
-    #'K2017_Email pr1 Tfidf1(ngram=(1,2))': 
-    #( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ), #done 20/03
+    #'K2017_Email pr1 Tfidf1(ngram=(1,2))': #для доказательства, что лучше ngram=(1,2), чем (1,1)
+    #( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ),
+    # 'K2017_Email pr1 Tf1(ngram=(1,2))': #для доказательства, что tfidf1 лучше при тех же n-граммах
+    #( kagle2017_preproc1, (FeatureExtractors.extractor_tf_1, {'ngram_range':(1,2)}), {} ),
+    # 'K2017_Email pr1 Counts1)': #для доказательства, что tf1 и tfidf1 лучше
+    #( kagle2017_preproc1, (FeatureExtractors.extractor_words_counts_1, {}), {} ),
     #'E_Email pr1 Tfidf1(ngram=(1,1))': 
     #( enron_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ),
     #'E_Email pr1 Tfidf1(ngram=(1,2))': 
@@ -87,58 +92,53 @@ test_scenarios = {
     #'K2016_SMS pr1 Tfidf1(ngram=(1,1))': 
     #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ),
     #'K2016_SMS pr1 Tfidf1(ngram=(1,2))': 
-    #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ), #done 20/03
-    #'K2016_SMS pr1 Tfidf1(ngram=(1,3))': 
+    #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ),
+    #'K2016_SMS pr1 Tfidf1(ngram=(1,3))': #проверка перспективности экстрактора с такими параметрами
     #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,3)}), {} ),
-    #'K2016_SMS pr1 Tfidf1(ngram=(2,2))': 
+    #'K2016_SMS pr1 Tfidf1(ngram=(2,2))': #проверка перспективности экстрактора с такими параметрами
     #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(2,2)}), {} ),
     }
 
 #в валидатор для тривиальных надо передавать всегда самый полный список алгоритмов, чтобы фильтрация результатов полноценно работала
+#для комбинаций, ведь тривиальным списком пользуются алгоритмы-одиночки
 algs_for_trivial_combis = {
         'ComplementNB_Default': ComplementNBAlg_Default(),
         'SGDClf_Default': SGDAlg_Default(),
         'SGDAlg_AdaptiveIters': SGDAlg_AdaptiveIters(),
         'SGDAlg_LogLoss': SGDAlg_LogLoss(),
         'ASGDAlg_Default': ASGDAlg_Default(),
-        'NearestCentroid_Default': NearestCentroidAlg_Default(),
-        'LinearSVC_Default': LinearSVCAlg_Default(),
-        'LinearSVC_Balanced': LinearSVCAlg_Balanced(),
-        'LinearSVCAlg_MoreSupports': LinearSVCAlg_MoreSupports(),
-        'SVCAlg_RBF_Default': SVCAlg_RBF_Default(),
-        'SVCAlg_RBF_Aggr': SVCAlg_RBF_Aggr(),
-        'PAA_I_Default': PAA_I_Default(),
-        'PAA_II_Default': PAA_II_Default(),
-        'PAA_II_Balanced': PAA_II_Balanced(),
-        'kNN_Default': KNeighborsAlg_Default(),
-        'RandomForest_Default': RandomForestAlg_Default(),
-        'RandomForest_Big': RandomForestAlg_Big(),
-        'RandomForest_Medium': RandomForestAlg_Medium(),
-        'RandomForest_Small': RandomForestAlg_Small(),
-        'RandomForest_MDepth20': RandomForestAlg_MDepth20(),
-        'RandomForest_MDepth30': RandomForestAlg_MDepth30(),
-        'RandomForest_BigBootstrap75': RandomForestAlg_BigBootstrap75(),
-        'RandomForest_Bootstrap90': RandomForestAlg_Bootstrap90(),
-        'RandomForest_Balanced': RandomForestAlg_Balanced(),
-        'Perceptron_Default': PerceptronAlg_Default()
+        #'NearestCentroid_Default': NearestCentroidAlg_Default(),
+        #'LinearSVC_Default': LinearSVCAlg_Default(),
+        #'LinearSVC_Balanced': LinearSVCAlg_Balanced(),
+        #'LinearSVCAlg_MoreSupports': LinearSVCAlg_MoreSupports(),
+        #'SVCAlg_RBF_Default': SVCAlg_RBF_Default(),
+        #'PAA_I_Default': PAA_I_Default(),
+        #'PAA_II_Default': PAA_II_Default(),
+        #'PAA_II_Balanced': PAA_II_Balanced(),
+        #'kNN_Default': KNeighborsAlg_Default(),
+        #'RandomForest_Default': RandomForestAlg_Default(),
+        #'RandomForest_Big': RandomForestAlg_Big(),
+        #'RandomForest_Medium': RandomForestAlg_Medium(),
+        #'RandomForest_Small': RandomForestAlg_Small(),
+        #'RandomForest_MDepth20': RandomForestAlg_MDepth20(),
+        #'RandomForest_MDepth30': RandomForestAlg_MDepth30(),
+        #'RandomForest_BigBootstrap75': RandomForestAlg_BigBootstrap75(),
+        #'RandomForest_Bootstrap90': RandomForestAlg_Bootstrap90(),
+        #'RandomForest_Balanced': RandomForestAlg_Balanced(),
+        #'Perceptron_Default': PerceptronAlg_Default()
         }
 
-algs_without_ensembles = {
-        'ComplementNB_Default': ComplementNBAlg_Default(),
+algs_for_MC_BAGC = {
         'SGDClf_Default': SGDAlg_Default(),
         'SGDAlg_LogLoss': SGDAlg_LogLoss(),
         'ASGDAlg_Default': ASGDAlg_Default(),
-        'NearestCentroid_Default': NearestCentroidAlg_Default(),
-        'LinearSVC_Default': LinearSVCAlg_Default(),
-        'LinearSVC_Balanced': LinearSVCAlg_Balanced(),
-        'LinearSVCAlg_MoreSupports': LinearSVCAlg_MoreSupports(),
-        'SVCAlg_RBF_Default': SVCAlg_RBF_Default(),
-        'SVCAlg_RBF_Aggr': SVCAlg_RBF_Aggr(),
-        'PAA_I_Default': PAA_I_Default(),
-        'PAA_II_Default': PAA_II_Default(),
-        'PAA_II_Balanced': PAA_II_Balanced(),
-        'kNN_Default': KNeighborsAlg_Default(),
-        'Perceptron_Default': PerceptronAlg_Default()
+        #'LinearSVC_Default': LinearSVCAlg_Default(),
+        #'LinearSVC_Balanced': LinearSVCAlg_Balanced(),
+        #'LinearSVCAlg_MoreSupports': LinearSVCAlg_MoreSupports(),
+        #'SVCAlg_RBF_Default': SVCAlg_RBF_Default(),
+        #'PAA_I_Default': PAA_I_Default(),
+        #'PAA_II_Default': PAA_II_Default(),
+        #'PAA_II_Balanced': PAA_II_Balanced(),
         }
 
 enabled_combinations_types = { #single algs (SA) validation включено по умолчанию
@@ -152,8 +152,8 @@ enabled_combinations_types = { #single algs (SA) validation включено п�
 
 algs_dicts = {
     'TRIVIAL': algs_for_trivial_combis,
-    'MC': algs_without_ensembles,
-    'BAGC': algs_without_ensembles,
+    'MC': algs_for_MC_BAGC,
+    'BAGC': algs_for_MC_BAGC,
     'BOOSTC': None,
     'STACKC': None
     }
