@@ -77,31 +77,31 @@ kagle2016_preproc1 = KagleSMS2016DatasetPreprocessors().preprocessor_1()
 #название сценария будет использовано для названия каталога логов
 #данные сценарии тестируют те типы комбинаций, которые включены в переменных ниже, сценарии же сами по себе не определяют это
 test_scenarios = {
-    'K2017_Email pr1 Tfidf1(ngram=(1,1))': #done 06/04
-    ( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ), #( (corpus,y), (extractor_func, extractor_params), research_params )
+    #'K2017_Email pr1 Tfidf1(ngram=(1,1))': #DONE
+    #( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ), #( (corpus,y), (extractor_func, extractor_params), research_params )
     #'K2017_Email pr1 Tfidf1(ngram=(1,2))': #для доказательства, что лучше ngram=(1,2), чем (1,1)
-    #( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ),
-    # 'K2017_Email pr1 Tf1(ngram=(1,2))': #для доказательства, что tfidf1 лучше при тех же n-граммах
-    #( kagle2017_preproc1, (FeatureExtractors.extractor_tf_1, {'ngram_range':(1,2)}), {} ),
-    # 'K2017_Email pr1 Counts1)': #для доказательства, что tf1 и tfidf1 лучше
+    #( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ), #DONE
+    #'K2017_Email pr1 Tf1(ngram=(1,2))': #для доказательства, что tfidf1 лучше при тех же n-граммах
+    #( kagle2017_preproc1, (FeatureExtractors.extractor_tf_1, {'ngram_range':(1,2)}), {} ), #DONE
+    #'K2017_Email pr1 Counts1': #для доказательства, что tf1 и tfidf1 лучше #DONE
     #( kagle2017_preproc1, (FeatureExtractors.extractor_words_counts_1, {}), {} ),
-    #'E_Email pr1 Tfidf1(ngram=(1,1))': 
-    #( enron_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ),
-    #'E_Email pr1 Tfidf1(ngram=(1,2))': 
+    'E_Email pr1 Tfidf1(ngram=(1,1))': #DONE
+    ( enron_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ),
+    #'E_Email pr1 Tfidf1(ngram=(1,2))': #DONE
     #( enron_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ),
-    #'K2016_SMS pr1 Tfidf1(ngram=(1,1))': 
+    #'K2016_SMS pr1 Tfidf1(ngram=(1,1))': #DONE
     #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ),
-    #'K2016_SMS pr1 Tfidf1(ngram=(1,2))': 
+    #'K2016_SMS pr1 Tfidf1(ngram=(1,2))': #DONE
     #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ),
-    #'K2016_SMS pr1 Tfidf1(ngram=(1,3))': #проверка перспективности экстрактора с такими параметрами
+    #'K2016_SMS pr1 Tfidf1(ngram=(1,3))': #проверка перспективности экстрактора с такими же параметрами для улучшения результатов на СМС, где они низкие #DONE
     #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,3)}), {} ),
-    #'K2016_SMS pr1 Tfidf1(ngram=(2,2))': #проверка перспективности экстрактора с такими параметрами
+    #'K2016_SMS pr1 Tfidf1(ngram=(2,2))': #проверка перспективности экстрактора с такими же параметрами для улучшения результатов на СМС, где они низкие #DONE
     #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(2,2)}), {} ),
     }
 
 #в валидатор для тривиальных надо передавать всегда самый полный список алгоритмов, чтобы фильтрация результатов полноценно работала
 #для комбинаций, ведь тривиальным списком пользуются алгоритмы-одиночки
-algs_for_trivial_combis = {
+algs_for_trivial = {
         'ComplementNB_Default': ComplementNBAlg_Default(),
         'SGDClf_Default': SGDAlg_Default(),
         'SGDAlg_AdaptiveIters': SGDAlg_AdaptiveIters(),
@@ -151,7 +151,9 @@ enabled_combinations_types = { #single algs (SA) validation включено п�
     }
 
 algs_dicts = {
-    'TRIVIAL': algs_for_trivial_combis,
+    'SA': algs_for_trivial,
+    'DC': algs_for_trivial,
+    'CC': algs_for_trivial,
     'MC': algs_for_MC_BAGC,
     'BAGC': algs_for_MC_BAGC,
     'BOOSTC': None,
