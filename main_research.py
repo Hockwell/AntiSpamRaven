@@ -23,7 +23,7 @@ def run_single_algs_test():
     print('//////////////////////////// single alg test done')
 
 def run_algs_validation():
-    def run_searcher_on_dataset(X,y, k_folds, max_combination_length = 4):
+    def run_searcher_on_dataset(X,y, k_folds, max_combination_length = 5):
         AlgsCombinationsValidator.run(X, y, k_folds, algs_dicts, enabled_combinations_types, max_combination_length)
         print('//////////////////////////// algs validation done')
     
@@ -100,16 +100,16 @@ test_scenarios = {
     }
 
 #в валидатор для тривиальных надо передавать всегда самый полный список алгоритмов, чтобы фильтрация результатов полноценно работала
-#для комбинаций, ведь тривиальным списком пользуются алгоритмы-одиночки
+#для всех типов комбинаций, ведь тривиальным списком пользуются алгоритмы-одиночки
 algs_for_trivial = {
         'ComplementNB_Default': ComplementNBAlg_Default(),
         'SGDClf_Default': SGDAlg_Default(),
         'SGDAlg_AdaptiveIters': SGDAlg_AdaptiveIters(),
         'SGDAlg_LogLoss': SGDAlg_LogLoss(),
         'ASGDAlg_Default': ASGDAlg_Default(),
-        #'NearestCentroid_Default': NearestCentroidAlg_Default(),
-        #'LinearSVC_Default': LinearSVCAlg_Default(),
-        #'LinearSVC_Balanced': LinearSVCAlg_Balanced(),
+        'NearestCentroid_Default': NearestCentroidAlg_Default(),
+        'LinearSVC_Default': LinearSVCAlg_Default(),
+        'LinearSVC_Balanced': LinearSVCAlg_Balanced(),
         #'LinearSVCAlg_MoreSupports': LinearSVCAlg_MoreSupports(),
         #'SVCAlg_RBF_Default': SVCAlg_RBF_Default(),
         #'PAA_I_Default': PAA_I_Default(),
@@ -132,20 +132,20 @@ algs_for_MC_BAGC = {
         'SGDClf_Default': SGDAlg_Default(),
         'SGDAlg_LogLoss': SGDAlg_LogLoss(),
         'ASGDAlg_Default': ASGDAlg_Default(),
-        #'LinearSVC_Default': LinearSVCAlg_Default(),
-        #'LinearSVC_Balanced': LinearSVCAlg_Balanced(),
+        'LinearSVC_Default': LinearSVCAlg_Default(),
+        'LinearSVC_Balanced': LinearSVCAlg_Balanced(),
         #'LinearSVCAlg_MoreSupports': LinearSVCAlg_MoreSupports(),
         #'SVCAlg_RBF_Default': SVCAlg_RBF_Default(),
         #'PAA_I_Default': PAA_I_Default(),
         #'PAA_II_Default': PAA_II_Default(),
-        #'PAA_II_Balanced': PAA_II_Balanced(),
+        #'PAA_II_Balanced': PAA_II_Balanced()
         }
 
 enabled_combinations_types = { #single algs (SA) validation включено по умолчанию
     'DC': True,
-    'CC': True,
-    'MC': True,
-    'BAGC': True,
+    'CC': False,
+    'MC': False,
+    'BAGC': False,
     'BOOSTC': False,
     'STACKC': False
     }

@@ -6,6 +6,7 @@ import pandas as pd
 from operator import attrgetter
 from itertools import chain, combinations
 from abc import ABC
+import multiprocessing
 
 import os
 
@@ -111,14 +112,36 @@ class CollectionsInstruments(ABC):
         return dict(zip(keys, values))
 
     @staticmethod
+    def fill_dict_by_keys_and_vals(dict_, keys, values): #in-place
+        for key,val in zip(keys, values):
+            dict_[key] = val
+
+    @staticmethod
     def delete_dict_elements_by_removal_list(dict_, keys_removal_list): #in-place
         for key in keys_removal_list:
             del dict_[key]
+
 class MathInstruments(ABC):
     @staticmethod
     def make_subsets(iterable, max_size):
         #Сочетания без повторений (n,k) для всех k до заданного - это и есть все подмножества
         #algs НЕ должен компоноваться элементами None (нет алгоритма)
-        #генерим неповторяющиеся подмножества размерами от 1 до max_length
+        #генерим неповторяющиеся подмножества размерами от 1 до max_length из эл-ов iterable
         list_ = list(iterable)
+        max_size = np.min([len(list_), max_size])
         return list(chain.from_iterable(combinations(list_,k_i) for k_i in range(1,max_size + 1))) 
+
+class ServiceInstruments(ABC):
+    @staticmethod
+    def calc_optimal_threads_amount():
+        n_available_threads = multiprocessing.cpu_count()
+        if n_available_threads >= 24:
+            return 10
+        if n_available_threads >= 14:
+            return 8
+        if n_available_threads >= 9:
+            return n_available_threads - 4
+        if n_available_threads >= 6:
+            return n_available_threads - 3
+
+        return 2
