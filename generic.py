@@ -136,9 +136,9 @@ class ServiceInstruments(ABC):
     def calc_optimal_threads_amount():
         n_available_threads = multiprocessing.cpu_count()
         if n_available_threads >= 24:
-            return 10
-        if n_available_threads >= 14:
-            return 8
+            return 16
+        if n_available_threads >= 12:
+            return n_available_threads - 5
         if n_available_threads >= 9:
             return n_available_threads - 4
         if n_available_threads >= 6:

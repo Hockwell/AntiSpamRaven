@@ -52,9 +52,9 @@ from enum import Enum
 import time
 import copy
 from abc import ABC, abstractmethod, abstractstaticmethod
+from multiprocessing import Process, Queue, Pool, Manager, JoinableQueue
 import random
-import threading, multiprocessing
-from queue import Queue
+import threading
 
 from logs import *
 from generic import *
@@ -75,6 +75,7 @@ class AlgsCombinationsValidator(): #алгоритмические комбин�
         @abstractmethod
         def create_name(self):
             ...
+
     _folds_splits = None
     _enabled_combis_types = None
     _det_metrics_exported_vals_decimal_places = 4
@@ -416,6 +417,16 @@ class TrivialCombinationsValidator(AlgsCombinationsValidator):
             CONJUNCTIVE = 2
             MAJORITY = 3
 
+        class TrivialCombiTask(object): #комбинация, поданная на многопоточную обработку
+            def __init__(self, combi_name, combi_obj, SA_preds, folds_splits, SA_algs, multiproc_validator):
+                self.SA_preds = SA_preds
+                self.SA_algs = SA_algs
+                self.folds_splits = folds_splits
+                self.combi_obj = combi_obj
+                self.combi_name = combi_name
+                self.multiproc_validator_obj = multiproc_validator
+            
+
         #методы predict и fit не были имплементированы, поскольку результаты работы комбинации рассчитываются
         #исходя из комбинирования результатов работы алгоритмов-одиночек
         def __init__(self, type, algs_names, algs_objs):
@@ -489,21 +500,23 @@ class TrivialCombinationsValidator(AlgsCombinationsValidator):
                 pred_time_on_folds.append(t2-t1)
             perf_q_metrics = CollectionsInstruments.create_dict_by_keys_and_vals(self._PERFOMANCE_METRICS,
                                                                                 [np.mean(train_times_on_folds), np.mean(pred_time_on_folds)])
-            det_q_metrics = self._calc_mean_det_q_metrics_on_folds_for_algs_combi(alg_obj, single_algs_y_pred[alg_name])
+            det_q_metrics = self._calc_mean_det_q_metrics_on_folds_for_algs_combi(alg_obj, single_algs_y_pred[alg_name], AlgsCombinationsValidator._folds_splits)
             alg_obj.quality_metrics = CollectionsInstruments.merge_dicts(det_q_metrics, perf_q_metrics)
         print('////////////////// test_single_algs_on_folds() done')
         return single_algs_y_pred
 
-    def _calc_mean_det_q_metrics_on_folds_for_algs_combi(self, combi_obj, y_pred_combi_on_folds):
+    @staticmethod
+    def _calc_mean_det_q_metrics_on_folds_for_algs_combi(combi_obj, y_pred_combi_on_folds, folds_splits):
         combi_det_q_metrics_on_folds_dicts = []
-        for (i,(_, _, _, y_validFold)) in enumerate(AlgsCombinationsValidator._folds_splits):
+        for (i,(_, _, _, y_validFold)) in enumerate(folds_splits):
             combi_det_q_metrics_on_folds_dicts.append(AlgsCombinationsValidator._calc_detection_quality_metrics_on_fold(y_pred_combi_on_folds[i], y_validFold))
         return AlgsCombinationsValidator._calc_mean_det_metrics_vals_for_combi(combi_det_q_metrics_on_folds_dicts)
 
-    def _calc_perf_q_metrics_for_algs_combi(self, combi_obj):
+    @staticmethod
+    def _calc_perf_q_metrics_for_algs_combi(combi_obj, algs_SA):
         #для быстрого обращения к нужным данным
-        single_algs_perf_metrics = {alg_name:{perf_metric_name: self._algs_SA[alg_name].quality_metrics[perf_metric_name] 
-                                                        for perf_metric_name in self._PERFOMANCE_METRICS} for alg_name in self._algs_SA}
+        single_algs_perf_metrics = {alg_name:{perf_metric_name: algs_SA[alg_name].quality_metrics[perf_metric_name] 
+                                                        for perf_metric_name in AlgsCombinationsValidator._PERFOMANCE_METRICS} for alg_name in algs_SA}
         #{algs_combi_name:{'train_time':, 'pred_time': }}
         #pred_time, train_time вычисляются для комбинации подсчетом суммы значений этих метрик для каждого алгоритма в отдельности,
         #не учитывается время, которое тратится на агрегацию прогнозов (or, and функции, например), но это и не важно
@@ -518,8 +531,9 @@ class TrivialCombinationsValidator(AlgsCombinationsValidator):
             return self._algs_DC
         if combis_type == self.TrivialCombination.Types.MAJORITY:
             return self._algs_MC
-
-    def _calc_y_preds_combi_on_folds(self,combi_obj, SA_y_preds):
+    
+    @staticmethod
+    def _calc_y_preds_combi_on_folds(combi_obj, SA_y_preds, folds_splits):
         def tune_validation(combis_type):
             def DC_agregation_func(y_pred_combination, y_pred_alg):
                 return np.logical_or(y_pred_combination, y_pred_alg)
@@ -545,13 +559,13 @@ class TrivialCombinationsValidator(AlgsCombinationsValidator):
             aggreg_func_args = {}
             y_pred_combi_init_func = None
 
-            if combis_type == self.TrivialCombination.Types.CONJUNCTIVE:                
+            if combis_type == TrivialCombinationsValidator.TrivialCombination.Types.CONJUNCTIVE:                
                 combis_aggregation_func = CC_agregation_func
                 y_pred_combi_init_func = np.ones
-            if combis_type == self.TrivialCombination.Types.DISJUNCTIVE:
+            if combis_type == TrivialCombinationsValidator.TrivialCombination.Types.DISJUNCTIVE:
                 combis_aggregation_func = DC_agregation_func
                 y_pred_combi_init_func = np.zeros
-            if combis_type == self.TrivialCombination.Types.MAJORITY:
+            if combis_type == TrivialCombinationsValidator.TrivialCombination.Types.MAJORITY:
                 combis_aggregation_func = MC_agregation_func
                 y_pred_combi_init_func = np.zeros
             return combis_aggregation_func, y_pred_combi_init_func
@@ -561,7 +575,7 @@ class TrivialCombinationsValidator(AlgsCombinationsValidator):
         #Раскомментировать для логирования
         #LogsFileProvider().loggers['ml_research_calculations'].info('---------' + str(self.get_algs_combination_name(combi)))
         y_pred_combi_on_folds = []
-        for (folds_split_num,(_, _, _, y_validFold)) in enumerate(AlgsCombinationsValidator._folds_splits):
+        for (folds_split_num,(_, _, _, y_validFold)) in enumerate(folds_splits):
             y_pred_combination = y_pred_combi_init_func(y_validFold.shape, dtype=bool)
             combi_algs_spam_verdicts_on_fold = [0 for _ in range(y_validFold.shape[0])] #каждому семплу соответсвует кол-во зафиксированных вердиктов "спам" (для MC)
             for alg_num, alg_name in enumerate(combi_obj.algs_names):
@@ -576,109 +590,25 @@ class TrivialCombinationsValidator(AlgsCombinationsValidator):
             y_pred_combi_on_folds.append(y_pred_combination)
 
         return y_pred_combi_on_folds #[[],[],[]...]
-
-    def _validate_combi(self, combi_obj, SA_y_preds):
-        y_pred_combi_on_folds = self._calc_y_preds_combi_on_folds(combi_obj, SA_y_preds) #предсказания комбинации на фолдах
-        combi_detection_q_metrics = self._calc_mean_det_q_metrics_on_folds_for_algs_combi(combi_obj, y_pred_combi_on_folds)
-        combi_perfomance_q_metrics = self._calc_perf_q_metrics_for_algs_combi(combi_obj)
+    
+    @staticmethod
+    def validate_combi(combi_obj, SA_y_preds, splits_folds, algs_SA): #адаптирован под многопоточность
+        y_pred_combi_on_folds = TrivialCombinationsValidator._calc_y_preds_combi_on_folds(combi_obj, SA_y_preds, AlgsCombinationsValidator._folds_splits) #предсказания комбинации на фолдах
+        combi_detection_q_metrics = TrivialCombinationsValidator._calc_mean_det_q_metrics_on_folds_for_algs_combi(combi_obj, y_pred_combi_on_folds, AlgsCombinationsValidator._folds_splits)
+        combi_perfomance_q_metrics = TrivialCombinationsValidator._calc_perf_q_metrics_for_algs_combi(combi_obj, algs_SA)
         combi_obj.quality_metrics = CollectionsInstruments.merge_dicts(combi_detection_q_metrics, combi_perfomance_q_metrics)
 
-    def __run_combis_validation(self, SA_y_preds, combis_type, multi_threading = True):
+    def __run_combis_validation(self, SA_y_preds, combis_type, multi_threading = False):
+        #multi_threading = True не работает, хотя функционал внедрён, есть неизвестные преграды, подробности в реализации
         def in_single_thread():
             for combi_name in algs_combis_dict:
-                self._validate_combi(algs_combis_dict[combi_name], SA_y_preds)
-
-        def in_multi_threading():
-            def run_threads():
-                for thr in threads:
-                     thr.start()
-
-            def validate_combis(tasks_queue):
-                while True:
-                    combi_name,combi_obj,SA_y_preds = tasks_queue.get()
-                    self._validate_combi(combi_obj,SA_y_preds)
-                    add_combi(combi_name,combi_obj)
-                    tasks_queue.task_done()
-
-            def add_combi(combi_name, combi_obj):
-                lock.acquire()
-                algs_combis_dict[combi_name] = combi_obj
-                lock.release()
-
-            def put_tasks(algs_combis):
-                for combi_name in algs_combis:
-                    #SA_y_preds_copy = copy.deepcopy(SA_y_preds)
-                    #AlgsCombinationsValidator._folds_splits
-                    tasks_queue.put((combi_name,algs_combis[combi_name],SA_y_preds))
-
-            def put_stop_flags():
-                for i in range(n_threads):
-                    tasks_queue.put(None)
-
-            lock = threading.Lock()
-            algs_combis_copy = copy.deepcopy(algs_combis_dict)
-            CollectionsInstruments.delete_dict_elements_by_removal_list(algs_combis_dict, list(algs_combis_dict.keys()))
-            tasks_queue = Queue()
-            n_threads = ServiceInstruments.calc_optimal_threads_amount()
-            print('used threads:', n_threads)
-            threads = [threading.Thread(target=validate_combis, args=[tasks_queue]) for i in range(n_threads)]
-            put_tasks(algs_combis_copy)
-            run_threads()
-            tasks_queue.join()
-            #put_stop_flags()
+                self.validate_combi(algs_combis_dict[combi_name], SA_y_preds, AlgsCombinationsValidator._folds_splits, self._algs_SA)
 
         algs_combis_dict = self._get_combis_by_type(combis_type)
-        if multi_threading:
-            in_multi_threading()
+        if multi_threading: 
+            TrivialCombisMultiprocessingValidator.run(algs_combis_dict, SA_y_preds, AlgsCombinationsValidator._folds_splits, self._algs_SA)
         else:
             in_single_thread()
-        
-    def __run_combis_validation_multi(self, SA_y_preds, combis_type): #многопоточный алгоритм, потребляющий больше ОЗУ
-        def run_threads():
-            for i in range(ServiceInstruments.calc_optimal_threads_amount()):
-                threading.Thread(target=validate_combis, args=[tasks_queue]).start()
-
-        def add_combi(combi_name, combi_obj):
-            lock.acquire()
-            algs_combinations[combi_name] = combi_obj
-            lock.release()
-
-        def put_tasks(algs_combis):
-            for combi_name in algs_combis:
-                #SA_y_preds_copy = copy.deepcopy(SA_y_preds)
-                tasks_queue.put((combi_name,algs_combis[combi_name],SA_y_preds, AlgsCombinationsValidator._folds_splits))
-
-        def validate_combis(tasks_queue):
-            def validate_combi():
-                for (folds_split_num,(_, _, _, y_validFold)) in enumerate(folds_splits):
-                    y_pred_combination = y_pred_combi_init_func(y_validFold.shape, dtype=bool)
-                    combi_algs_spam_verdicts_on_fold = [0 for _ in range(y_validFold.shape[0])] #каждому семплу соответсвует кол-во зафиксированных вердиктов "спам" (для MC)
-                    for alg_num, alg_name in enumerate(combi_obj.algs_names):
-                        y_pred_alg = SA_y_preds[alg_name][folds_split_num]
-                        y_pred_combination = calc_y_pred_combi()
-                #combi_obj.quality_metrics = {'z':57345345}
-            while True:
-                combi_name,combi_obj,SA_y_preds,folds_splits = tasks_queue.get()
-                validate_combi()
-                add_combi(combi_name,combi_obj)
-                tasks_queue.task_done()
-
-        if combis_type == self.TrivialCombination.Types.CONJUNCTIVE: 
-            algs_combinations = self._algs_CC
-        if combis_type == self.TrivialCombination.Types.DISJUNCTIVE:
-            algs_combinations = self._algs_DC
-        if combis_type == self.TrivialCombination.Types.MAJORITY:
-            algs_combinations = self._algs_MC
-
-        lock = threading.Lock()
-        calc_y_pred_combi, y_pred_combi_init_func = select_calc_instruments()
-        algs_combis_copy = copy.deepcopy(algs_combinations)
-        CollectionsInstruments.delete_dict_elements_by_removal_list(algs_combinations, list(algs_combinations.keys()))
-        tasks_queue = Queue()
-        put_tasks(algs_combis_copy)
-        run_threads()
-        tasks_queue.join()
-        print()
 
     def _log_with_highlighters(self, logger, sorted_algs_combis_di, algs_SA, enabled_highlighters):
         super()._log_with_highlighters(logger, sorted_algs_combis_di, algs_SA, enabled_highlighters)
@@ -876,5 +806,61 @@ class BoostingCombisFiltration(CombinationsFiltration, ABC):
     pass
 
 
-    
+class TrivialCombisMultiprocessingValidator(object):
+    #реализация шаблона Producer-Consumers
+    @staticmethod
+    def run(algs_combis_dict, SA_y_preds, folds_splits, SA_algs):
+        self_ = TrivialCombisMultiprocessingValidator()
+        self_.algs_combis_dict = algs_combis_dict
+        self_.SA_y_preds = SA_y_preds
+        self_.folds_splits = folds_splits
+        self_.SA_algs = SA_algs
+
+        #if __name__ == '__main__':
+        
+        algs_combis_copy = copy.deepcopy(self_.algs_combis_dict)
+        CollectionsInstruments.delete_dict_elements_by_removal_list(self_.algs_combis_dict, list(self_.algs_combis_dict.keys()))
+        #self_.tasks = JoinableQueue()
+        m = multiprocessing.Manager() #ПРОБЛЕМА: здесь происходит зависание программы, без выброски исключения, всё остальное в теории должно работать
+        lock = m.Lock()
+        self_.tasks = m.Queue()
+
+        n_threads = ServiceInstruments.calc_optimal_threads_amount()
+        print('used threads:', n_threads)
+        self_.workers = [multiprocessing.Process(target=self_.validate_combis, args=(self_.tasks,lock,)) for i in range(n_threads)]
+        self_._put_tasks(algs_combis_copy)
+        self_._run_workers()
+        self_.tasks.join()
+        self_._put_stop_flags()
+            
+    def _run_workers(self):
+        for w in self.workers:
+            w.start()
+
+    @staticmethod
+    def validate_combis(tasks_queue, lock):
+        while True:
+            task = tasks_queue.get()
+            print(task)
+            if task == None:
+                tasks_queue.task_done()
+                break
+            TrivialCombinationsValidator.validate_combi(task.combi_obj,task.SA_y_preds, task.folds_splits, task.SA_algs)
+            with lock:
+                add_combi(combi_name,combi_obj, task.multiproc_validator_obj)
+            tasks_queue.task_done()
+
+    @staticmethod
+    def _add_combi(combi_name, combi_obj, self_): #single threading
+        self_.algs_combis_dict[combi_name] = combi_obj
+
+    def _put_tasks(self, algs_combis):
+        for combi_name in algs_combis:
+            task = TrivialCombinationsValidator.TrivialCombination.TrivialCombiTask(
+                combi_name, algs_combis[combi_name],copy.deepcopy(self.SA_y_preds), copy.deepcopy(self.folds_splits), copy.deepcopy(self.SA_algs), self)
+            self.tasks.put(task)
+
+    def _put_stop_flags():
+        for i in range(n_threads):
+            self.tasks.put(None)
         
