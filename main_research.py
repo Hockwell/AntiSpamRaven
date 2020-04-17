@@ -23,7 +23,7 @@ def run_single_algs_test():
     print('//////////////////////////// single alg test done')
 
 def run_algs_validation():
-    def run_searcher_on_dataset(X,y, k_folds, max_combination_length = 5):
+    def run_searcher_on_dataset(X,y, k_folds, max_combination_length = 4):
         AlgsCombinationsValidator.run(X, y, k_folds, algs_dicts, enabled_combinations_types, max_combination_length)
         print('//////////////////////////// algs validation done')
     
@@ -63,7 +63,6 @@ def run_algs_validation():
         LogsFileProvider.delete_log_files_on_hot()
     LogsFileProvider.shutdown()
 
-set_libs_settings()
 
 #Работа с любым датасетом - это прохождение необходимых этапов: 1) предобработка, 2) извлечение признаков, 3) тестирование (типы проверяемых комбинаций указываются вне сценариев),
 #поэтому и созданы "тестовые сценарии", любой сценарий здесь можно задать или легко модифицировать старые. 
@@ -77,26 +76,26 @@ kagle2016_preproc1 = KagleSMS2016DatasetPreprocessors().preprocessor_1()
 #название сценария будет использовано для названия каталога логов
 #данные сценарии тестируют те типы комбинаций, которые включены в переменных ниже, сценарии же сами по себе не определяют это
 test_scenarios = {
-    #'K2017_Email pr1 Tfidf1(ngram=(1,1))': #DONE
-    #( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ), #( (corpus,y), (extractor_func, extractor_params), research_params )
-    #'K2017_Email pr1 Tfidf1(ngram=(1,2))': #для доказательства, что лучше ngram=(1,2), чем (1,1)
-    #( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ), #DONE
-    #'K2017_Email pr1 Tf1(ngram=(1,2))': #для доказательства, что tfidf1 лучше при тех же n-граммах
-    #( kagle2017_preproc1, (FeatureExtractors.extractor_tf_1, {'ngram_range':(1,2)}), {} ), #DONE
-    #'K2017_Email pr1 Counts1': #для доказательства, что tf1 и tfidf1 лучше #DONE
-    #( kagle2017_preproc1, (FeatureExtractors.extractor_words_counts_1, {}), {} ),
+    'K2017_Email pr1 Tfidf1(ngram=(1,1))': #DONE
+    ( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ), #( (corpus,y), (extractor_func, extractor_params), research_params )
+    'K2017_Email pr1 Tfidf1(ngram=(1,2))': #для доказательства, что лучше ngram=(1,2), чем (1,1)
+    ( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ), #DONE
+    'K2017_Email pr1 Tf1(ngram=(1,2))': #для доказательства, что tfidf1 лучше при тех же n-граммах
+    ( kagle2017_preproc1, (FeatureExtractors.extractor_tf_1, {'ngram_range':(1,2)}), {} ), #DONE
+    'K2017_Email pr1 Counts1': #для доказательства, что tf1 и tfidf1 лучше #DONE
+    ( kagle2017_preproc1, (FeatureExtractors.extractor_words_counts_1, {}), {} ),
     'E_Email pr1 Tfidf1(ngram=(1,1))': #DONE
     ( enron_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ),
-    #'E_Email pr1 Tfidf1(ngram=(1,2))': #DONE
-    #( enron_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ),
-    #'K2016_SMS pr1 Tfidf1(ngram=(1,1))': #DONE
-    #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ),
-    #'K2016_SMS pr1 Tfidf1(ngram=(1,2))': #DONE
-    #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ),
-    #'K2016_SMS pr1 Tfidf1(ngram=(1,3))': #проверка перспективности экстрактора с такими же параметрами для улучшения результатов на СМС, где они низкие #DONE
-    #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,3)}), {} ),
-    #'K2016_SMS pr1 Tfidf1(ngram=(2,2))': #проверка перспективности экстрактора с такими же параметрами для улучшения результатов на СМС, где они низкие #DONE
-    #( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(2,2)}), {} ),
+    'E_Email pr1 Tfidf1(ngram=(1,2))': #DONE
+    ( enron_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ),
+    'K2016_SMS pr1 Tfidf1(ngram=(1,1))': #DONE
+    ( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ),
+    'K2016_SMS pr1 Tfidf1(ngram=(1,2))': #DONE
+    ( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ),
+    'K2016_SMS pr1 Tfidf1(ngram=(1,3))': #проверка перспективности экстрактора с такими же параметрами для улучшения результатов на СМС, где они низкие #DONE
+    ( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,3)}), {} ),
+    'K2016_SMS pr1 Tfidf1(ngram=(2,2))': #проверка перспективности экстрактора с такими же параметрами для улучшения результатов на СМС, где они низкие #DONE
+    ( kagle2016_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(2,2)}), {} ),
     }
 
 #в валидатор для тривиальных надо передавать всегда самый полный список алгоритмов, чтобы фильтрация результатов полноценно работала
@@ -110,22 +109,22 @@ algs_for_trivial = {
         'NearestCentroid_Default': NearestCentroidAlg_Default(),
         'LinearSVC_Default': LinearSVCAlg_Default(),
         'LinearSVC_Balanced': LinearSVCAlg_Balanced(),
-        #'LinearSVCAlg_MoreSupports': LinearSVCAlg_MoreSupports(),
-        #'SVCAlg_RBF_Default': SVCAlg_RBF_Default(),
-        #'PAA_I_Default': PAA_I_Default(),
-        #'PAA_II_Default': PAA_II_Default(),
-        #'PAA_II_Balanced': PAA_II_Balanced(),
-        #'kNN_Default': KNeighborsAlg_Default(),
-        #'RandomForest_Default': RandomForestAlg_Default(),
-        #'RandomForest_Big': RandomForestAlg_Big(),
-        #'RandomForest_Medium': RandomForestAlg_Medium(),
-        #'RandomForest_Small': RandomForestAlg_Small(),
-        #'RandomForest_MDepth20': RandomForestAlg_MDepth20(),
-        #'RandomForest_MDepth30': RandomForestAlg_MDepth30(),
-        #'RandomForest_BigBootstrap75': RandomForestAlg_BigBootstrap75(),
-        #'RandomForest_Bootstrap90': RandomForestAlg_Bootstrap90(),
-        #'RandomForest_Balanced': RandomForestAlg_Balanced(),
-        #'Perceptron_Default': PerceptronAlg_Default()
+        'LinearSVCAlg_MoreSupports': LinearSVCAlg_MoreSupports(),
+        'SVCAlg_RBF_Default': SVCAlg_RBF_Default(),
+        'PAA_I_Default': PAA_I_Default(),
+        'PAA_II_Default': PAA_II_Default(),
+        'PAA_II_Balanced': PAA_II_Balanced(),
+        'kNN_Default': KNeighborsAlg_Default(),
+        'RandomForest_Default': RandomForestAlg_Default(),
+        'RandomForest_Big': RandomForestAlg_Big(),
+        'RandomForest_Medium': RandomForestAlg_Medium(),
+        'RandomForest_Small': RandomForestAlg_Small(),
+        'RandomForest_MDepth20': RandomForestAlg_MDepth20(),
+        'RandomForest_MDepth30': RandomForestAlg_MDepth30(),
+        'RandomForest_BigBootstrap75': RandomForestAlg_BigBootstrap75(),
+        'RandomForest_Bootstrap90': RandomForestAlg_Bootstrap90(),
+        'RandomForest_Balanced': RandomForestAlg_Balanced(),
+        'Perceptron_Default': PerceptronAlg_Default()
         }
 
 algs_for_MC_BAGC = {
@@ -134,18 +133,18 @@ algs_for_MC_BAGC = {
         'ASGDAlg_Default': ASGDAlg_Default(),
         'LinearSVC_Default': LinearSVCAlg_Default(),
         'LinearSVC_Balanced': LinearSVCAlg_Balanced(),
-        #'LinearSVCAlg_MoreSupports': LinearSVCAlg_MoreSupports(),
-        #'SVCAlg_RBF_Default': SVCAlg_RBF_Default(),
-        #'PAA_I_Default': PAA_I_Default(),
-        #'PAA_II_Default': PAA_II_Default(),
-        #'PAA_II_Balanced': PAA_II_Balanced()
+        'LinearSVCAlg_MoreSupports': LinearSVCAlg_MoreSupports(),
+        'SVCAlg_RBF_Default': SVCAlg_RBF_Default(),
+        'PAA_I_Default': PAA_I_Default(),
+        'PAA_II_Default': PAA_II_Default(),
+        'PAA_II_Balanced': PAA_II_Balanced()
         }
 
 enabled_combinations_types = { #single algs (SA) validation включено по умолчанию
     'DC': True,
-    'CC': False,
-    'MC': False,
-    'BAGC': False,
+    'CC': True,
+    'MC': True,
+    'BAGC': True,
     'BOOSTC': False,
     'STACKC': False
     }
@@ -160,5 +159,12 @@ algs_dicts = {
     'STACKC': None
     }
 
-run_algs_validation()
-#run_single_algs_test()
+ #__main__ - это скрипт, который запустился на исполнение ОС, потом он мог запустить какие угодно модули.
+#подпроцессы исполняют текущий модуль каждый раз заново и не только тот, который нужен, а начинает именно с __main__, хотя он им может быть по факту не нужен
+#(функции target в нем нет)
+#необходимо, чтобы подпроцессы не выполняли этот блок кода, поскольку это точка входа - подпроцесс заново начнёт исполнять программу.
+#похоже подпроцессы делают __name__ != __main__
+if __name__ == '__main__':
+    set_libs_settings()
+    run_algs_validation()
+    #run_single_algs_test()
