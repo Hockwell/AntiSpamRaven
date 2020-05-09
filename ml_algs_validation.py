@@ -16,30 +16,12 @@
 #Общий алгоритм работы:
 #1) генерируем фолды,
 #2) тесты с кросс-валидацией,
+#3) фильтруем,
 #3) логгируем.
 #Таким образом, какие бы комбинации не тестировались, они должны быть совместимы с основными этапами (должным образом унифицированы).
 #Тривиальные комбинации связаны логической операцией, не более того. Усложнённые комбинации не просто связывают результаты работы каждого алгоритма,
 #обучение каждого алгоритма каждой комбинации может проходить по-разному из-за разницы в обучающих семплах, в параметрах, доступных признаках..., а
 #значит сначала запомнить предсказания алгоритмов-одиночек, а потом их связать не получится.
-
-#Этап 2 при поиске тривиальных комбинаций:
-#1)тестируем на фолдах алгоритмы по-одиночке: 
-#    а)запоминаем y_pred на каждом фолде, 
-#    б)считаем и запоминаем средние по фолдам метрики производительности, 
-#    в)считаем и запоминаем средние по фолдам метрики качества обнаружения (вызываеттся общий для всех типов комбинаций метод),
-#    г)записываем все метрики в поля объектов выбранной комбинации.
-#2) тестируем на фолдах комбинации**:
-#    а)используем (или заново считаем, если стекинг#) 2a* для вычисления и запоминания предсказаний комбинаций на фолдах (y_pred_combis_on_folds),
-#    б)считаем и запоминаем метрики качества обнаружения (вызываеттся общий для всех типов комбинаций метод),
-#    в)считаем метрики производительности (разные методы, в зависимости от типа комбинации, но может быть одинаковая логика),
-#    г)записываем все метрики в поля объектов выбранной комбинации.
-#*они связаны логическим законом комбинации: дизъюнкцией, конъюнкцией..., однако комбинации могут быть сложнее, чем просто один связующий закон,
-#тогда придётся не полагаться на уже посчитанные на этапе 2а y_pred
-#**на данном этапе вызываются методы (они должны удовлетворять пунктам 3а-3г, такая формализация позволяет лучше обобщить код) 
-#для каждого типа комбинации (метод run()), 
-#там же настраивается экспорт результатов.
-#Почему нельзя убрать подпункт г? Потому что метрики собираются разными способами, их невозможно сохранить сразу в одном месте, 
-#а хранить в одном виде их нужно для удобства сортировки.
 
 #Проводить тестирование single_algs необходимо независимо от того исследуются комбинации или нет, потому что данные о работе алгоритмов-одиночек используются
 #при фильтрации любых типов комбинаций
@@ -85,7 +67,7 @@ class AlgsCombinationsValidator(): #алгоритмические комбин�
     _enabled_combis_types = None
     _det_metrics_exported_vals_decimal_places = 4
     _perf_metrics_exported_vals_decimal_places = 7
-    _max_combination_length = 4
+    _max_combis_lengths_dict = None
 
     _DETECTION_METRICS = ['f1', 'auc', 'acc', 'prec', 'rec'] #единые для всех комбинаций метрики, вынесены в отдельное место
     #для упрощения добавлений/удалений метрик из вычислений, унификации и наглядности
@@ -93,12 +75,12 @@ class AlgsCombinationsValidator(): #алгоритмические комбин�
 
 
     @staticmethod
-    def run(X, y, k_folds, algs_dicts, enabled_combinations_types, max_combination_length = 4, 
+    def run(X, y, k_folds, algs_dicts, enabled_combinations_types, max_combis_lengths_dict, 
             det_metrics_exported_vals_decimal_places = 4, perf_metrics_exported_vals_decimal_places = 7): #совмещение исследований всех валидаторов
         AlgsCombinationsValidator._folds_splits = DatasetInstruments.make_stratified_split_on_stratified_k_folds(X,y,k_folds)
         AlgsCombinationsValidator._det_metrics_exported_vals_decimal_places = det_metrics_exported_vals_decimal_places
         AlgsCombinationsValidator._perf_metrics_exported_vals_decimal_places = perf_metrics_exported_vals_decimal_places
-        AlgsCombinationsValidator._max_combination_length = max_combination_length
+        AlgsCombinationsValidator._max_combis_lengths_dict = max_combis_lengths_dict
         AlgsCombinationsValidator._enabled_combis_types = enabled_combinations_types
 
         acv = AlgsCombinationsValidator()
@@ -273,7 +255,7 @@ class AlgsCombinationsValidator(): #алгоритмические комбин�
                                     log_header="//// ALL COMBINATIONS ////")
 
     def _init_combis(self, algs_dict_items, combis_dict, combis_type_cls, combis_type = None, 
-                          min_length = 1, max_length = _max_combination_length): #add in-place
+                          min_length = 1, max_length = 4): #add in-place
         algs_subsets = MathInstruments.make_subsets(algs_dict_items, max_length)#для остального кода важно, чтобы subset-ы
                 #алгоритмов укладывались последовательно по мере увеличения длины комбинаций: сначала длин 1, потом 2...
                 #[ [(alg_i_name, alg_i_obj),(),()...],[],[]... ]
@@ -334,7 +316,8 @@ class ComplexCombinationsValidator(AlgsCombinationsValidator):
     class BaggingCombination(ComplexCombination): #n_jobs = -1 не работает
         def __init__(self, algs_names, algs_objs):
             super().__init__(algs_names, algs_objs)
-            self._clf = BaggingClassifier(base_estimator=algs_objs[0].clf, n_estimators=5, n_jobs = 1, bootstrap = True, max_samples=0.95)
+            self._clf = BaggingClassifier(base_estimator=algs_objs[0].clf, n_estimators=AlgsCombinationsValidator._max_combis_lengths_dict['BAGC'], 
+                                          n_jobs = 1, bootstrap = True, max_samples=0.95)
 
         def create_name(self):
             return super().create_name('BAGGING')
@@ -461,15 +444,15 @@ class TrivialCombinationsValidator(AlgsCombinationsValidator):
         if AlgsCombinationsValidator._enabled_combis_types['DC']:
             self._algs_DC = {}
             self._init_combis(algs_dicts['DC'].items(), self._algs_DC, self.TrivialCombination, self.TrivialCombination.Types.DISJUNCTIVE, min_length=2, 
-                                   max_length=AlgsCombinationsValidator._max_combination_length)
+                                   max_length=AlgsCombinationsValidator._max_combis_lengths_dict['DC'])
         if AlgsCombinationsValidator._enabled_combis_types['CC']:
             self._algs_CC = {}
             self._init_combis(algs_dicts['CC'].items(), self._algs_CC, self.TrivialCombination, self.TrivialCombination.Types.CONJUNCTIVE, min_length=2, 
-                                   max_length=AlgsCombinationsValidator._max_combination_length)
+                                   max_length=AlgsCombinationsValidator._max_combis_lengths_dict['CC'])
         if AlgsCombinationsValidator._enabled_combis_types['MC']:
             self._algs_MC = {}
             self._init_combis(algs_dicts['MC'].items(), self._algs_MC, self.TrivialCombination, self.TrivialCombination.Types.MAJORITY, min_length=2, 
-                                   max_length=AlgsCombinationsValidator._max_combination_length)
+                                   max_length=AlgsCombinationsValidator._max_combis_lengths_dict['MC'])
 
     def _validate(self, **args):
         single_algs_y_preds_on_folds = self.__validate_single_algs_on_folds()
@@ -649,7 +632,7 @@ class CombinationsFiltration(ABC):
     #*по факту не проверяется, поскольку комбинация всегда работает медленнее её участников по-одиночке,
     #поэтому если комбинация не лучше в prec или rec, то она считается бесполезной
     #если требуется уточнение "на сколько лучше", то менять необходимо кол-во знаков после запятой
-    @abstractstaticmethod
+    @staticmethod
     def _remove_useless_combis(combis_dict_filtered, algs_SA, comparing_metrics=['rec','prec']):
         def is_combi_useless(combi, comparing_metrics):
             def is_combi_metrics_not_better(algs_combi_metrics, single_algs_metrics): 
@@ -676,7 +659,7 @@ class CombinationsFiltration(ABC):
     #комбинации избыточной длинны - добавление нового алгоритма не улучшает никакие основные метрики
        #если к комбинации прикрепить ещё один и более алгоритмов, то комбинация останется избыточной,
             #т.е. удалять такие комбинации надо в идеале комплексно - с удалением подобных.
-    @abstractstaticmethod
+    @staticmethod
     def _remove_excessively_long_combinations(combis_dict_filtered, combis_dict_full, algs_SA,comparing_metrics=['rec','prec']):
         #2)T=Cn_k*n: перебираем каждую комбинацию, берём её список алгоритмов(m), на основе m-1 из них делаем сабсеты,
         #находим таких комбинаций-предшественников. Минус подхода: много дублирующих проверок и медлительность.
@@ -728,7 +711,7 @@ class CombinationsFiltration(ABC):
                 #Раскомментировать для логирования
                 #LogsFileProvider().loggers['ml_research_calculations'].info(str(keys_removal_list))
 
-    @abstractstaticmethod
+    @staticmethod
     def _remove_combis_with_bad_metrics_vals(combis_dict_filtered, not_bad_metr_vals_range={'prec':[0.9,1.0], 'rec':[0.85,1.0]}):
         def is_combi_has_bad_metrics_vals(combi, not_bad_metr_vals_range):
         #фильтрация по диапазонам метрик качества обнаружения
@@ -742,7 +725,7 @@ class CombinationsFiltration(ABC):
             return False
         CombinationsFiltration._remove_combis_by_condition(is_combi_has_bad_metrics_vals, combis_dict_filtered, True, {'not_bad_metr_vals_range': not_bad_metr_vals_range})
 
-    @abstractstaticmethod
+    @staticmethod
     def highlight_best_unique_algs_combis_in_results(algs_SA, sorted_combis_dict_items, entries_amount_of_each_alg = 1): 
     #entries_amount_of_alg = 1 is combis_with_unique_algs
     #Уникальная комбинация - та, где есть хотя бы один уникальный алгоритм (ранее не встречался в комбинациях).

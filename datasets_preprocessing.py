@@ -27,9 +27,9 @@ class DatasetPreprocessors(ABC):
         self._DATASET_FILE_NAME = self._DATASET_NAME + self._DATA_FILE_EXTENSION
         self._DATASET_PATH = self._DATASETS_PATH + self._DATASET_FILE_NAME
         self._PREPROC_FILES_SUFFIX = preproc_files_suffix
-        self._PREPROC_CORPUS_FILE_NAME = self._DATASET_NAME + self._PREPROC_FILES_SUFFIX + "_corpus" + self._DATA_FILE_EXTENSION;
+        self._PREPROC_DATASET_FILE_NAME = self._DATASET_NAME + self._PREPROC_FILES_SUFFIX + "_bow" + self._DATA_FILE_EXTENSION;
         self._PREPROC_Y_FILE_NAME = self._DATASET_NAME + self._PREPROC_FILES_SUFFIX + "_y" + self._DATA_FILE_EXTENSION;
-        self._PREPROC_CORPUS_FILE_PATH = self._PREPROC_RESULTS_PATH + self._PREPROC_CORPUS_FILE_NAME
+        self._PREPROC_DATASET_FILE_PATH = self._PREPROC_RESULTS_PATH + self._PREPROC_DATASET_FILE_NAME
         self._PREPROC_Y_FILE_PATH = self._PREPROC_RESULTS_PATH + self._PREPROC_Y_FILE_NAME
 
     @staticmethod
@@ -76,15 +76,15 @@ class DatasetPreprocessors(ABC):
 
     def _preprocess(self, load_saved_preproc_data_func, run_preprocessing_func): #осуществляет управлением сохранением результатов препроцессинга
         try:
-            dataset_corpus, y = load_saved_preproc_data_func()
+            dataset_bow, y = load_saved_preproc_data_func()
         except IOError:
             try:
-                os.remove(self._PREPROC_CORPUS_FILE_PATH)
+                os.remove(self._PREPROC_DATASET_FILE_PATH)
                 os.remove(self._PREPROC_Y_FILE_PATH)
             except OSError:
                 pass
-            dataset_corpus, y = run_preprocessing_func()
-        return dataset_corpus, y
+            dataset_bow, y = run_preprocessing_func()
+        return dataset_bow, y
 
 class Kagle2017DatasetPreprocessors(DatasetPreprocessors): #эти классы должны быть Singleton-ами, но сделать наследование от класса DP
    #при этом будет невозможно. Реализация в виде статических классов более громоздкая. 
@@ -93,13 +93,13 @@ class Kagle2017DatasetPreprocessors(DatasetPreprocessors): #эти классы 
 
     def preprocessor_1(self):
         def load_saved_preproc_data():
-            dataset_corpus = pd.read_csv(filepath_or_buffer = self._PREPROC_CORPUS_FILE_PATH, names = ['text'])['text']
+            dataset_bow = pd.read_csv(filepath_or_buffer = self._PREPROC_DATASET_FILE_PATH, names = ['text'])['text']
             y = pd.read_csv(filepath_or_buffer = self._PREPROC_Y_FILE_PATH, names = ['y'])['y']
-            return dataset_corpus,y
+            return dataset_bow,y
 
         def run_preprocessing():
             def save_preproc_data():
-                dataset.loc[:,('text')].to_csv(path_or_buf = self._PREPROC_CORPUS_FILE_PATH, index = False, columns = ['text'])
+                dataset.loc[:,('text')].to_csv(path_or_buf = self._PREPROC_DATASET_FILE_PATH, index = False, columns = ['text'])
                 y.to_csv(path_or_buf = self._PREPROC_Y_FILE_PATH, index = False)
 
             raw_data = pd.read_csv(self._DATASET_PATH)
@@ -120,13 +120,13 @@ class EnronDatasetPreprocessors(DatasetPreprocessors):
 
     def preprocessor_1(self):
         def load_saved_preproc_data():
-            dataset_corpus = pd.read_csv(filepath_or_buffer = self._PREPROC_CORPUS_FILE_PATH, names = ['text'])['text']
+            dataset_bow = pd.read_csv(filepath_or_buffer = self._PREPROC_DATASET_FILE_PATH, names = ['text'])['text']
             y = pd.read_csv(filepath_or_buffer = self._PREPROC_Y_FILE_PATH, names = ['y'])['y']
-            return dataset_corpus,y
+            return dataset_bow,y
 
         def run_preprocessing():
             def save_preproc_data():
-                dataset.loc[:,('text')].to_csv(path_or_buf = self._PREPROC_CORPUS_FILE_PATH, index = False, columns = ['text'])
+                dataset.loc[:,('text')].to_csv(path_or_buf = self._PREPROC_DATASET_FILE_PATH, index = False, columns = ['text'])
                 y.to_csv(path_or_buf = self._PREPROC_Y_FILE_PATH, index = False)
             
             raw_data = pd.read_csv(self._DATASET_PATH)
@@ -146,13 +146,13 @@ class KagleSMS2016DatasetPreprocessors(DatasetPreprocessors):
 
     def preprocessor_1(self):     
         def load_saved_preproc_data():
-            dataset_corpus = pd.read_csv(filepath_or_buffer = self._PREPROC_CORPUS_FILE_PATH, names = ['v2'])['v2']
+            dataset_bow = pd.read_csv(filepath_or_buffer = self._PREPROC_DATASET_FILE_PATH, names = ['v2'])['v2']
             y = pd.read_csv(filepath_or_buffer = self._PREPROC_Y_FILE_PATH, names = ['v1'])['v1']
-            return dataset_corpus,y
+            return dataset_bow,y
 
         def run_preprocessing():
             def save_preproc_data():
-                dataset.loc[:,('v2')].to_csv(path_or_buf = self._PREPROC_CORPUS_FILE_PATH, index = False, columns = ['v2'])
+                dataset.loc[:,('v2')].to_csv(path_or_buf = self._PREPROC_DATASET_FILE_PATH, index = False, columns = ['v2'])
                 y.to_csv(path_or_buf = self._PREPROC_Y_FILE_PATH, index = False)
             
             nltk.download('stopwords')

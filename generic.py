@@ -55,6 +55,7 @@ class DatasetInstruments(ABC):
 
         return folds
 
+    
     @staticmethod
     def make_stratified_split_on_stratified_k_folds(X,y,k=10): #X,y - by numpy only
         #кол-во фолдов совпадает с кол-вом итераций разбиения
@@ -70,6 +71,7 @@ class DatasetInstruments(ABC):
             folds.append((X_trainFolds, y_trainFolds, X_validFold, y_validFold))
         return folds
 
+    #X_train, y_train, X_test, y_test = DatasetInstruments.make_shuffle_stratified_split_on_folds(X,y, test_size = 0.25, n_splits=1)[0]
     @staticmethod
     def make_shuffle_stratified_split_on_folds(X,y, test_size = 0.2, n_splits=10): #X,y - by numpy only
         #кол-во фолдов (k) НЕ совпадает с кол-вом итераций разбиения (n_splits),потому что алг. с перемешиванием (рандомизированный).
