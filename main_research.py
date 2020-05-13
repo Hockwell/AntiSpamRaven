@@ -108,10 +108,10 @@ test_scenarios = {
     #( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ), #( (dataset_bow,y), (extractor_func, extractor_params), research_params )
     #'K2017_Email pr1 Tfidf1(ngram=(1,2))': #для доказательства, что лучше ngram=(1,2), чем (1,1)
     #( kagle2017_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,2)}), {} ), #DONE
-    'K2017_Email pr1 Tf1(ngram=(1,2))': #для доказательства, что tfidf1 лучше при тех же n-граммах
-    ( kagle2017_preproc1, (FeatureExtractors.extractor_tf_1, {'ngram_range':(1,2)}), {} ), #DONE
-    'K2017_Email pr1 Counts1': #для доказательства, что tf1 и tfidf1 лучше #DONE
-    ( kagle2017_preproc1, (FeatureExtractors.extractor_words_counts_1, {}), {} ),
+    #'K2017_Email pr1 Tf1(ngram=(1,2))': #для доказательства, что tfidf1 лучше при тех же n-граммах
+    #( kagle2017_preproc1, (FeatureExtractors.extractor_tf_1, {'ngram_range':(1,2)}), {} ), #DONE
+    #'K2017_Email pr1 Counts1': #для доказательства, что tf1 и tfidf1 лучше #DONE
+    #( kagle2017_preproc1, (FeatureExtractors.extractor_words_counts_1, {}), {} ),
     'E_Email pr1 Tfidf1(ngram=(1,1))': #DONE
     ( enron_preproc1, (FeatureExtractors.extractor_tfidf_1, {'ngram_range':(1,1)}), {} ),
     'E_Email pr1 Tfidf1(ngram=(1,2))': #DONE
@@ -135,7 +135,6 @@ algs_for_trivial = {
         #'SGDAlg_AdaptiveIters': SGDAlg_AdaptiveIters(),
         'SGDAlg_LogLoss': SGDAlg_LogLoss(),
         'ASGDAlg_Default': ASGDAlg_Default(),
-        #'NearestCentroid_Default': NearestCentroidAlg_Default(),
         'LinearSVC_Default': LinearSVCAlg_Default(),
         'LinearSVC_Balanced': LinearSVCAlg_Balanced(),
         'LinearSVCAlg_MoreSupports': LinearSVCAlg_MoreSupports(),
